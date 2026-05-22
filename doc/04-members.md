@@ -1,7 +1,7 @@
 # Phase 4 — Members Management
 
 ## Goal
-Implement the full member lifecycle: list all family members, invite by email, change roles, remove members, and upload profile pictures to Firebase Storage. By the end, admins have full control over who is in the family and with what permissions.
+Implement the full member lifecycle: list all family members, invite by email, surface the shareable family invite code, change roles, remove members, and upload profile pictures to Firebase Storage. By the end, admins have full control over who is in the family and with what permissions.
 
 ---
 
@@ -21,21 +21,27 @@ export async function inviteMember(
 ): Promise<void> {
   // Check if a user with this email already exists
   let targetUid: string | null = null;
+  let targetUser: Awaited<ReturnType<typeof adminAuth.getUserByEmail>> | null = null;
   try {
-    const existingUser = await adminAuth.getUserByEmail(email);
-    targetUid = existingUser.uid;
+    targetUser = await adminAuth.getUserByEmail(email);
+    targetUid = targetUser.uid;
   } catch {
     // User doesn't exist yet — invite is pending
   }
 
-  if (targetUid) {
+  if (targetUid && targetUser) {
     // User exists — add directly as member
     const memberRef = adminDb.doc(`families/${familyId}/members/${targetUid}`);
     const existing = await memberRef.get();
     if (existing.exists) throw new Error("User is already a member");
 
     const batch = adminDb.batch();
+    // Identity fields are copied onto the member doc so getFamilyMembers needs
+    // no extra per-member reads — consistent with createFamily/joinFamilyByCode.
     batch.set(memberRef, {
+      displayName: targetUser.displayName ?? targetUser.email ?? "Unknown",
+      email: targetUser.email ?? "",
+      photoURL: targetUser.photoURL ?? null,
       role: "member",
       status: "active",
       joinedAt: FieldValue.serverTimestamp(),
@@ -189,6 +195,7 @@ import { getFamilyForUser, getFamilyMembers } from "@/lib/family.server";
 import { getMemberWithAssetCount } from "@/lib/members.server";
 import { MemberCard } from "@/components/members/MemberCard";
 import { InviteForm } from "@/components/members/InviteForm";
+import { InviteCodePanel } from "@/components/members/InviteCodePanel";
 
 export default async function MembersPage() {
   const user = await requireUser();
@@ -209,6 +216,9 @@ export default async function MembersPage() {
         <h1 className="text-2xl font-semibold text-gray-900">Members</h1>
         {isAdmin && <InviteForm />}
       </div>
+
+      {/* Invite code is shown to admins only */}
+      {isAdmin && family.inviteCode && <InviteCodePanel code={family.inviteCode} />}
 
       <div className="space-y-3">
         {membersWithCounts.map((member) => (
@@ -350,6 +360,52 @@ export function InviteForm() {
 }
 ```
 
+```typescript
+// src/components/members/InviteCodePanel.tsx
+"use client";
+import { useState } from "react";
+
+// Admin-only panel. The page already gates rendering on isAdmin, but the code
+// itself is not a secret — anyone with it can join, so treat it like a password
+// the admin chooses to share.
+export function InviteCodePanel({ code }: { code: string }) {
+  const [copied, setCopied] = useState(false);
+
+  async function copyCode() {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard API unavailable (e.g. non-secure context) — user can select manually
+    }
+  }
+
+  return (
+    <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-center justify-between gap-4">
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-gray-900">Family invite code</p>
+        <p className="text-xs text-gray-500">
+          Share this code so others can join from the onboarding screen.
+        </p>
+      </div>
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <span className="font-mono text-lg tracking-[0.3em] text-gray-900 bg-white border border-gray-200 rounded-lg px-3 py-1.5 select-all">
+          {code}
+        </span>
+        <button
+          type="button"
+          onClick={copyCode}
+          className="text-sm px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          {copied ? "Copied!" : "Copy"}
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
 ---
 
 ## Step 5 — Profile picture upload (Client Component)
@@ -476,8 +532,12 @@ export default function MembersError({ error, reset }: { error: Error; reset: ()
 
 - [ ] `/members` shows all active members with their asset counts
 - [ ] Admin can invite by email — if user exists, they're added immediately; if not, an invite doc is created
+- [ ] A directly-invited member's doc includes `displayName`, `email`, and `photoURL` (resolves correctly in `getFamilyMembers`)
 - [ ] Admin can change roles — change persists and UI updates
 - [ ] Admin can remove a member — member status becomes "removed", they lose dashboard access
 - [ ] Non-admin cannot see the invite form or role/remove controls
+- [ ] Admin sees the family invite code panel; non-admin does not
+- [ ] "Copy" copies the invite code to the clipboard
+- [ ] The displayed code matches `family.inviteCode` and works on the join-family form
 - [ ] Avatar upload stores photo in Firebase Storage and updates Firestore
 - [ ] Loading skeleton shows during data fetch

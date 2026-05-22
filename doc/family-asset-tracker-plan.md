@@ -1,6 +1,11 @@
 # Family Asset Tracker — Implementation Plan
 **Stack: Next.js (App Router) + Firebase**
 
+> **Status: planning artifact.** This document captures the original design. The
+> numbered phase files (`01-project-setup.md` … `09-production.md`) are the
+> **authoritative implementation contract** — where a code sample here differs
+> from a phase file, the phase file wins. Known divergences are flagged inline below.
+
 ---
 
 ## 1. Project Overview
@@ -31,6 +36,7 @@ A multi-user family financial dashboard to track assets across currencies and ma
 ```
 families/{familyId}
   ├── name: string
+  ├── inviteCode: string           // 6-char code new members use to join
   ├── createdAt: timestamp
   ├── createdBy: userId
   └── settings/
@@ -52,6 +58,7 @@ families/{familyId}/assets/{assetId}
   ├── amount: number
   ├── description: string
   ├── attachmentURL?: string       // Firebase Storage URL
+  ├── deleted: boolean             // soft-delete flag; all queries filter deleted == false
   ├── createdAt: timestamp
   └── updatedAt: timestamp
 
@@ -90,6 +97,11 @@ users/{userId}                       // global user profile
 ```
 
 ### 3.2 Security Rules (Firestore)
+
+> **Superseded by `09-production.md` Step 1.** These draft rules allow client-side
+> writes, but all writes in the final design go through the Admin SDK (which bypasses
+> rules). The audited rules deny every client write as defense in depth. Use the
+> Phase 9 version when deploying.
 
 ```javascript
 // firestore.rules
@@ -369,16 +381,22 @@ export async function createAsset(formData: FormData) {
   const family = await getFamilyForUser(user.uid);
 
   const parsed = AssetSchema.parse(Object.fromEntries(formData));
-  await addDoc(collection(db, `families/${family.id}/assets`), {
+  // Server Actions write via the Admin SDK — never the client SDK.
+  await adminDb.collection(`families/${family.id}/assets`).add({
     ...parsed,
     ownerId: user.uid,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
+    deleted: false,
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
   });
 
   revalidatePath("/assets");
 }
 ```
+
+> **Note:** This is illustrative. In the final design (`05-assets.md`), the
+> Firestore write lives in `src/lib/assets.server.ts` and the Server Action only
+> validates input and calls it — no business logic in the action itself.
 
 ---
 
@@ -519,7 +537,7 @@ export async function recordRepayment(
 FIREBASE_PROJECT_ID=your-project-id
 FIREBASE_CLIENT_EMAIL=firebase-adminsdk@your-project.iam.gserviceaccount.com
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n..."
-SESSION_SECRET=a-long-random-string
+CRON_SECRET=...                  # secures the /api/fx-rates cron endpoint
 
 # Client-safe (must be NEXT_PUBLIC_ to reach the browser)
 NEXT_PUBLIC_FIREBASE_API_KEY=...
@@ -528,11 +546,13 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
 NEXT_PUBLIC_FIREBASE_APP_ID=...
-
-# External APIs
-OPEN_EXCHANGE_RATES_APP_ID=...   # or omit if using free Frankfurter API
-CRON_SECRET=...                  # for securing /api/fx-rates cron endpoint
+NEXT_PUBLIC_APP_URL=...          # e.g. http://localhost:3000 — used by the logout redirect
 ```
+
+> **Removed from earlier drafts:** `SESSION_SECRET` is unnecessary — the Firebase
+> Admin SDK signs its own session cookies. `OPEN_EXCHANGE_RATES_APP_ID` is unused —
+> the project standardizes on the free, keyless **Frankfurter API**. Sentry and
+> Vercel KV variables are added in `09-production.md`.
 
 ```json
 // vercel.json — daily FX rate refresh
