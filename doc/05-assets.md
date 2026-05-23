@@ -317,19 +317,21 @@ import Link from "next/link";
 export default async function AssetsPage({
   searchParams,
 }: {
-  searchParams: { owner?: string; category?: string };
+  // Next.js 16: searchParams is async and must be awaited
+  searchParams: Promise<{ owner?: string; category?: string }>;
 }) {
+  const { owner, category } = await searchParams;
   const user = await requireUser();
   const family = await getFamilyForUser(user.uid);
   if (!family) return null;
 
   const [assets, rates] = await Promise.all([
-    getAssets(family.id, searchParams.owner),
+    getAssets(family.id, owner),
     getCachedRates(family.id),
   ]);
 
-  const filtered = searchParams.category
-    ? assets.filter((a) => a.category === searchParams.category)
+  const filtered = category
+    ? assets.filter((a) => a.category === category)
     : assets;
 
   const totalInBase = filtered.reduce(

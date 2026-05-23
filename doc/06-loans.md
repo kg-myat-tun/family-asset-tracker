@@ -286,8 +286,10 @@ import Link from "next/link";
 export default async function LoansPage({
   searchParams,
 }: {
-  searchParams: { tab?: "lent" | "owed" | "all" };
+  // Next.js 16: searchParams is async and must be awaited
+  searchParams: Promise<{ tab?: "lent" | "owed" | "all" }>;
 }) {
+  const { tab: tabParam } = await searchParams;
   const user = await requireUser();
   const family = await getFamilyForUser(user.uid);
   if (!family) return null;
@@ -298,7 +300,7 @@ export default async function LoansPage({
     getCachedRates(family.id),
   ]);
 
-  const tab = searchParams.tab ?? "all";
+  const tab = tabParam ?? "all";
   const filtered =
     tab === "lent"
       ? loans.filter((l) => l.lenderId === user.uid)
@@ -358,14 +360,16 @@ import { getCachedRates, formatCurrency, convertAmount } from "@/lib/currency.se
 import { LoanDetail } from "@/components/loans/LoanDetail";
 import { notFound } from "next/navigation";
 
-export default async function LoanDetailPage({ params }: { params: { loanId: string } }) {
+// Next.js 16: params is async and must be awaited
+export default async function LoanDetailPage({ params }: { params: Promise<{ loanId: string }> }) {
+  const { loanId } = await params;
   const user = await requireUser();
   const family = await getFamilyForUser(user.uid);
   if (!family) return null;
 
   const [loan, repayments, members, rates] = await Promise.all([
-    getLoan(family.id, params.loanId),
-    getRepayments(family.id, params.loanId),
+    getLoan(family.id, loanId),
+    getRepayments(family.id, loanId),
     getFamilyMembers(family.id),
     getCachedRates(family.id),
   ]);

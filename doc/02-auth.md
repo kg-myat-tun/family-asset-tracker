@@ -15,7 +15,7 @@ Firebase Auth (browser)   →     POST /api/auth/login
   signInWithPopup (Google)            createSessionCookie()
   getIdToken()                        Set-Cookie: session=...
 
-All subsequent requests      →  cookies().get("session")
+All subsequent requests      →  (await cookies()).get("session")
   (automatic via browser)          verifySessionCookie()
                                      → user uid + claims
 ```
@@ -35,7 +35,7 @@ import { adminAuth } from "@/firebase/admin";
 import type { DecodedIdToken } from "firebase-admin/auth";
 
 export async function requireUser(): Promise<DecodedIdToken> {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("session")?.value;
 
   if (!sessionCookie) {
@@ -52,7 +52,7 @@ export async function requireUser(): Promise<DecodedIdToken> {
 }
 
 export async function getOptionalUser(): Promise<DecodedIdToken | null> {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("session")?.value;
   if (!sessionCookie) return null;
 
@@ -65,6 +65,10 @@ export async function getOptionalUser(): Promise<DecodedIdToken | null> {
 ```
 
 ---
+
+> **Next.js 16:** `cookies()` is async and must be `await`ed — likewise
+> `headers()` and route `params`/`searchParams`. The old synchronous fallback
+> from Next.js 15 is gone (see Phases 5–7).
 
 ## Step 2 — Login Route Handler
 
@@ -116,7 +120,7 @@ import { cookies } from "next/headers";
 import { adminAuth } from "@/firebase/admin";
 
 export async function POST() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("session")?.value;
 
   if (sessionCookie) {

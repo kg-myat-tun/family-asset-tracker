@@ -220,7 +220,7 @@ Call `await assertWithinRateLimit(user.uid, "create-loan")` at the top of each s
 ## Step 6 — Error monitoring (Sentry)
 
 ```bash
-npx @sentry/wizard@latest -i nextjs
+pnpm dlx @sentry/wizard@latest -i nextjs
 ```
 
 The wizard creates `sentry.client.config.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts`, and wraps `next.config.ts`. After setup:
@@ -234,7 +234,7 @@ The wizard creates `sentry.client.config.ts`, `sentry.server.config.ts`, `sentry
 ## Step 7 — End-to-end tests (Playwright)
 
 ```bash
-npm init playwright@latest
+pnpm create playwright
 ```
 
 Run E2E against the **Firebase emulator suite** so tests never touch production data:
@@ -291,7 +291,7 @@ NEXT_PUBLIC_SENTRY_DSN=
 Verify the rules deny what they should:
 
 ```bash
-firebase emulators:exec --only firestore "npm run test:rules"
+firebase emulators:exec --only firestore "pnpm test:rules"
 ```
 
 Write `firestore.rules.test.ts` with `@firebase/rules-unit-testing`:
@@ -305,7 +305,7 @@ Write `firestore.rules.test.ts` with `@firebase/rules-unit-testing`:
 
 ## Verification / Completion Checklist
 
-- [ ] `npm run build` passes with zero TypeScript errors
+- [ ] `pnpm build` passes with zero TypeScript errors
 - [ ] Firestore & Storage rules deployed and tested with the emulator
 - [ ] Composite indexes deployed; no "missing index" errors in logs
 - [ ] Every Server Action validates input with Zod

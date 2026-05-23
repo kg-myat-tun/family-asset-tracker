@@ -7,9 +7,10 @@ You are a senior full-stack engineer implementing a family financial asset track
 ## Project Identity
 
 - **App name:** Family Asset Tracker
-- **Stack:** Next.js 14+ App Router · TypeScript · Tailwind CSS · Firebase (Auth, Firestore, Storage) · Vercel
-- **Repo:** A brand-new, standalone repository — NOT the user's portfolio repo
-- **Deploy target:** Separate Vercel project from the user's portfolio
+- **Stack:** Next.js 16+ App Router · TypeScript · Tailwind CSS · Firebase (Auth, Firestore, Storage) · Vercel
+- **Tooling:** Node.js 24.x · pnpm (package manager) · Biome 2.4.15 (formatter & linter — no ESLint/Prettier)
+- **Repo:** A brand-new, standalone repository
+- **Deploy target:** Vercel project 
 
 ---
 
@@ -39,6 +40,7 @@ Execute these instruction files in sequence. Complete all tasks in a file before
 - Never trust `familyId` from the client — always derive it from the verified session
 - All Firestore writes go through typed helper functions in `src/lib/`
 - No business logic in page components — pages are thin, logic lives in `src/lib/` and `src/actions/`
+- Format and lint with **Biome 2.4.15** — `pnpm lint` must pass clean before a phase is done
 
 ### Security
 - Firebase Admin SDK is **server-only** — never import it in Client Components
@@ -162,7 +164,8 @@ NEXT_PUBLIC_APP_URL=          # e.g. http://localhost:3000 — used by the logou
 ## Completion Checklist
 
 After all phases are done, verify:
-- [ ] `npm run build` passes with zero TypeScript errors
+- [ ] `pnpm build` passes with zero TypeScript errors
+- [ ] `pnpm lint` passes (Biome) with no errors
 - [ ] All Firestore Security Rules deployed and tested with the emulator
 - [ ] All `.env.local` values documented in `.env.example` (no real values)
 - [ ] `README.md` covers local setup, env vars, and deploy steps

@@ -10,7 +10,7 @@
 
 ## 1. Project Overview
 
-A multi-user family financial dashboard to track assets across currencies and manage inter-family loans. Built with Next.js 14+ App Router for SSR/Server Components and Firebase for auth, Firestore (database), and Storage. Deployed as a **separate Vercel project** from your portfolio.
+A multi-user family financial dashboard to track assets across currencies and manage inter-family loans. Built with Next.js 16+ App Router for SSR/Server Components and Firebase for auth, Firestore (database), and Storage. Deployed as a **separate Vercel project** from your portfolio.
 
 ---
 
@@ -18,7 +18,7 @@ A multi-user family financial dashboard to track assets across currencies and ma
 
 | Layer | Technology | Purpose |
 |---|---|---|
-| Framework | Next.js 14+ (App Router) | SSR, Server Components, Server Actions |
+| Framework | Next.js 16+ (App Router) | SSR, Server Components, Server Actions |
 | UI | React + Tailwind CSS | Component library |
 | Auth | Firebase Authentication | Email/password + Google OAuth |
 | Database | Cloud Firestore | Real-time data, nested collections |
@@ -26,6 +26,7 @@ A multi-user family financial dashboard to track assets across currencies and ma
 | Currency API | Frankfurter API (free) / Open Exchange Rates | Live FX rates |
 | Hosting | Vercel | Deploy Next.js SSR (separate project from portfolio) |
 | State | Server Components + React Context | Server-first, minimal client state |
+| Tooling | Node.js 24.x + pnpm + Biome 2.4.15 | Runtime, package manager, and formatter/linter (no ESLint/Prettier) |
 
 ---
 
@@ -484,7 +485,8 @@ export async function recordRepayment(
 ## 7. Implementation Phases
 
 ### Phase 1 — Foundation (Week 1–2)
-- [ ] `npx create-next-app@latest` with TypeScript + Tailwind + App Router
+- [ ] `pnpm create next-app@latest` with TypeScript + Tailwind + App Router (no ESLint)
+- [ ] Biome configured for formatting & linting
 - [ ] Firebase project: Auth, Firestore, Storage
 - [ ] Vercel project created (separate from portfolio)
 - [ ] Firebase Admin SDK + session cookie auth

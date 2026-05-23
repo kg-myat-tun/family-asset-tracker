@@ -1,40 +1,98 @@
 # Phase 1 — Project Setup
 
 ## Goal
-Scaffold a clean Next.js 14+ App Router project with TypeScript, Tailwind, and Firebase SDKs wired up. By the end of this phase the app runs locally with a working Firebase connection.
+Scaffold a clean Next.js 16+ App Router project with TypeScript, Tailwind, Biome `2.4.15`, and the Firebase SDKs wired up. The package manager is **pnpm** throughout. By the end of this phase the app runs locally with a working Firebase connection.
 
 ---
 
 ## Step 1 — Scaffold the project
 
+> These instructions target **Next.js 16**. Before scaffolding, make sure your
+> local Node.js version is **24.x**.
+
 ```bash
-npx create-next-app@latest family-asset-tracker \
+pnpm create next-app@latest family-asset-tracker \
   --typescript \
   --tailwind \
-  --eslint \
+  --no-eslint \
   --app \
   --src-dir \
-  --import-alias "@/*"
+  --import-alias "@/*" \
+  --use-pnpm
 
 cd family-asset-tracker
 ```
 
+> `--no-eslint` skips ESLint — Biome (Step 2) handles linting and formatting.
+> `--use-pnpm` makes the scaffold install dependencies with pnpm.
+
 ---
 
-## Step 2 — Install dependencies
+## Step 2 — Install dependencies & tooling
 
 ```bash
 # Firebase
-npm install firebase firebase-admin
+pnpm add firebase firebase-admin
 
 # Utilities
-npm install zod date-fns
+pnpm add zod date-fns
 
 # Charts (used in Phase 7)
-npm install recharts
+pnpm add recharts
 
-# Dev tooling
-npm install -D @types/node
+# Dev tooling — types + Biome 2.4.15 (formatter & linter)
+pnpm add -D @types/node @biomejs/biome@2.4.15
+```
+
+### Biome — formatter & linter
+
+The project scaffolds with `--no-eslint`; **Biome** handles both formatting and
+linting (it replaces ESLint *and* Prettier). Generate the config:
+
+```bash
+pnpm exec biome init
+```
+
+`biome init` writes `biome.json` with a `$schema` matching the installed Biome
+version. These docs pin **Biome `2.4.15`**; replace the generated contents with:
+
+```json
+// biome.json
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": { "ignoreUnknown": true },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "linter": {
+    "enabled": true,
+    "rules": { "recommended": true }
+  },
+  "javascript": {
+    "formatter": { "quoteStyle": "double", "semicolons": "always" }
+  }
+}
+```
+
+`useIgnoreFile` makes Biome respect `.gitignore`, so it never touches `.next/`
+or `node_modules/`. Add the `format`/`lint` scripts to `package.json` (the
+`next` scripts are created by the scaffold):
+
+```json
+{
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write ."
+  }
+}
 ```
 
 ---
@@ -227,8 +285,9 @@ export default function RootPage() {
 
 ## Verification
 
-- [ ] `npm run dev` starts without errors
-- [ ] No TypeScript errors (`npm run build`)
+- [ ] `pnpm dev` starts without errors
+- [ ] No TypeScript errors (`pnpm build`)
+- [ ] `pnpm lint` passes (Biome — formatting and linting clean)
 - [ ] `src/types/index.ts` exists with all domain types
 - [ ] Firebase client and admin files are in place
 - [ ] `.env.example` is committed, `.env.local` is gitignored
