@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/fx-rates",
+      "schedule": "0 1 * * *"
+    }
+  ]
+}
