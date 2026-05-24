@@ -536,9 +536,7 @@ export async function recordRepayment(
 
 ```bash
 # .env.local (server-only — never prefix with NEXT_PUBLIC_)
-FIREBASE_PROJECT_ID=your-project-id
-FIREBASE_CLIENT_EMAIL=firebase-adminsdk@your-project.iam.gserviceaccount.com
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n..."
+FIREBASE_SERVICE_ACCOUNT_KEY_PATH=./firebase/serviceAccountKey.json
 CRON_SECRET=...                  # secures the /api/fx-rates cron endpoint
 
 # Client-safe (must be NEXT_PUBLIC_ to reach the browser)

@@ -45,7 +45,7 @@ Execute these instruction files in sequence. Complete all tasks in a file before
 ### Security
 - Firebase Admin SDK is **server-only** — never import it in Client Components
 - Session cookie is `httpOnly: true, secure: true, sameSite: "lax"`
-- `FIREBASE_PRIVATE_KEY` and `FIREBASE_CLIENT_EMAIL` are never prefixed `NEXT_PUBLIC_`
+- `FIREBASE_SERVICE_ACCOUNT_KEY_PATH` is server-only and is never prefixed `NEXT_PUBLIC_`
 - Firestore Security Rules enforce all access — never rely solely on server-side checks
 
 ### Patterns
@@ -144,9 +144,7 @@ export interface FxRates {
 
 ```bash
 # Server-only (.env.local)
-FIREBASE_PROJECT_ID=
-FIREBASE_CLIENT_EMAIL=
-FIREBASE_PRIVATE_KEY=
+FIREBASE_SERVICE_ACCOUNT_KEY_PATH=./firebase/serviceAccountKey.json
 CRON_SECRET=
 
 # Client-safe (NEXT_PUBLIC_ prefix required)

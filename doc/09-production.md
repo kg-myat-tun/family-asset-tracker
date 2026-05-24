@@ -256,7 +256,7 @@ Minimum critical-path coverage in `e2e/`:
 ## Step 8 — Environment variable audit
 
 - [ ] No secret is prefixed `NEXT_PUBLIC_` — only the six Firebase client keys and `NEXT_PUBLIC_APP_URL` carry that prefix.
-- [ ] `FIREBASE_PRIVATE_KEY`, `FIREBASE_CLIENT_EMAIL`, `CRON_SECRET`, Sentry tokens, and KV credentials are **server-only**.
+- [ ] `FIREBASE_SERVICE_ACCOUNT_KEY_PATH`, `CRON_SECRET`, Sentry tokens, and KV credentials are **server-only**.
 - [ ] Every key in `.env.local` has a matching empty key in `.env.example` (no real values committed).
 - [ ] All production values are set in the Vercel project dashboard (Production + Preview scopes).
 - [ ] `vercel.json` cron path includes `?secret=` matching `CRON_SECRET`.
@@ -265,9 +265,7 @@ Reference set (see `00-master.md` for the authoritative list):
 
 ```bash
 # Server-only
-FIREBASE_PROJECT_ID=
-FIREBASE_CLIENT_EMAIL=
-FIREBASE_PRIVATE_KEY=
+FIREBASE_SERVICE_ACCOUNT_KEY_PATH=./firebase/serviceAccountKey.json
 CRON_SECRET=
 SENTRY_AUTH_TOKEN=
 KV_REST_API_URL=

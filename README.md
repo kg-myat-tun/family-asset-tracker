@@ -16,8 +16,10 @@ Next.js 16 + Firebase app for tracking family assets, loans, and cross-currency 
 
 1. Install Node.js `24.x`
 2. Install dependencies with `pnpm install`
-3. Copy `.env.example` values into `.env.local`
-4. Run `pnpm dev`
+3. Download your Firebase service account JSON key
+4. Place it at `./firebase/serviceAccountKey.json` or update `FIREBASE_SERVICE_ACCOUNT_KEY_PATH` in `.env.local`
+5. Copy `.env.example` values into `.env.local`
+6. Run `pnpm dev`
 
 ## Scripts
 
