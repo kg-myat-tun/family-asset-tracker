@@ -1,26 +1,22 @@
-import { LogoutButton } from "@/components/layout/LogoutButton";
+import type { Family, FamilyMember } from "@/types";
+import { Header } from "./Header";
+import { Sidebar } from "./Sidebar";
 
 interface AppShellProps {
+  user: { uid: string; email: string };
+  family: Family;
+  members: FamilyMember[];
   children: React.ReactNode;
-  userId: string;
 }
 
-export function AppShell({ children, userId }: AppShellProps) {
+export function AppShell({ user, family, children }: AppShellProps) {
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-line bg-card/90 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-[0.24em] text-accent">
-              Family Asset Tracker
-            </p>
-            <p className="mt-1 text-sm text-muted">Signed in as {userId}</p>
-          </div>
-          <LogoutButton />
-        </div>
-      </header>
-
-      {children}
+    <div className="flex h-screen bg-gray-50">
+      <Sidebar family={family} />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header user={user} family={family} />
+        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+      </div>
     </div>
   );
 }
