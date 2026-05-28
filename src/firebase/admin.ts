@@ -29,6 +29,7 @@ function getAdminApp() {
       clientEmail: serviceAccount.client_email,
       privateKey: serviceAccount.private_key,
     }),
+    projectId: serviceAccount.project_id,
   });
 }
 
@@ -37,5 +38,6 @@ export function getAdminAuth() {
 }
 
 export function getAdminDb() {
-  return getFirestore(getAdminApp());
+  const databaseId = process.env.FIRESTORE_DATABASE_ID;
+  return databaseId ? getFirestore(getAdminApp(), databaseId) : getFirestore(getAdminApp());
 }

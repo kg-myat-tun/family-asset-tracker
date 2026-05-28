@@ -15,7 +15,8 @@ export function getClientAuth() {
 }
 
 export function getClientDb() {
-  return getFirestore(getFirebaseApp());
+  const databaseId = process.env.NEXT_PUBLIC_FIRESTORE_DATABASE_ID;
+  return databaseId ? getFirestore(getFirebaseApp(), databaseId) : getFirestore(getFirebaseApp());
 }
 
 function getFirebaseConfig(): {
