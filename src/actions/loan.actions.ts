@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { logActivity } from "@/lib/activity.server";
 import { requireUser } from "@/lib/auth.server";
+import { formatCurrency } from "@/lib/currency.server";
 import { getFamilyForUser, getFamilyMembers } from "@/lib/family.server";
 import { createLoan, getLoan, recordRepayment } from "@/lib/loans.server";
 
@@ -56,6 +58,14 @@ export async function createLoanAction(
     ...parsed.data,
   });
 
+  const borrower = members.find((m) => m.uid === parsed.data.borrowerId);
+  const lender = members.find((m) => m.uid === user.uid);
+  await logActivity(
+    family.id,
+    "loan_created",
+    `${lender?.displayName ?? "Someone"} lent ${formatCurrency(parsed.data.principalAmount, parsed.data.currency)} to ${borrower?.displayName ?? "someone"}`,
+  );
+
   revalidatePath("/loans");
   redirect(`/loans/${loanId}`);
 }
@@ -87,6 +97,12 @@ export async function recordRepaymentAction(
     ...parsed.data,
     recordedBy: user.uid,
   });
+
+  await logActivity(
+    family.id,
+    "repayment_made",
+    `Repayment of ${formatCurrency(parsed.data.amount, parsed.data.currency)} recorded on "${loan.description}"`,
+  );
 
   revalidatePath(`/loans/${loanId}`);
   revalidatePath("/loans");

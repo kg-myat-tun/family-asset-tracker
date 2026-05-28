@@ -3,8 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { logActivity } from "@/lib/activity.server";
 import { createAsset, getAsset, softDeleteAsset, updateAsset } from "@/lib/assets.server";
 import { requireUser } from "@/lib/auth.server";
+import { formatCurrency } from "@/lib/currency.server";
 import { getFamilyForUser, getFamilyMembers } from "@/lib/family.server";
 
 export type AssetFormState = { errors?: Record<string, string[]> } | null;
@@ -46,6 +48,12 @@ export async function createAssetAction(
     attachmentURL: parsed.data.attachmentURL || undefined,
   });
 
+  await logActivity(
+    family.id,
+    "asset_added",
+    `Added asset "${parsed.data.name}" (${formatCurrency(parsed.data.amount, parsed.data.currency)})`,
+  );
+
   revalidatePath("/assets");
   redirect(`/assets/${assetId}`);
 }
@@ -69,6 +77,8 @@ export async function updateAssetAction(
     ...parsed.data,
     attachmentURL: parsed.data.attachmentURL || undefined,
   });
+
+  await logActivity(family.id, "asset_updated", `Updated asset "${parsed.data.name}"`);
 
   revalidatePath("/assets");
   revalidatePath(`/assets/${assetId}`);
