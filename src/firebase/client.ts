@@ -1,7 +1,6 @@
 import { getApp, getApps, initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
 
 function getFirebaseApp() {
   if (getApps().length > 0) {
@@ -17,10 +16,6 @@ export function getClientAuth() {
 
 export function getClientDb() {
   return getFirestore(getFirebaseApp());
-}
-
-export function getClientStorage() {
-  return getStorage(getFirebaseApp());
 }
 
 function getFirebaseConfig(): {
