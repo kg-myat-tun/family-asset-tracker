@@ -40,6 +40,14 @@ export async function getAsset(familyId: string, assetId: string): Promise<Asset
   return docToAsset(snap);
 }
 
+function stripUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  const out: Partial<T> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (v !== undefined) out[k as keyof T] = v as T[keyof T];
+  }
+  return out;
+}
+
 export async function createAsset(
   familyId: string,
   ownerId: string,
@@ -49,12 +57,13 @@ export async function createAsset(
     currency: string;
     amount: number;
     description: string;
-    attachmentURL?: string;
+    attachmentURL?: string | null;
   },
 ): Promise<string> {
   const ref = getAdminDb().collection(`families/${familyId}/assets`).doc();
   await ref.set({
     ...data,
+    attachmentURL: data.attachmentURL ?? null,
     ownerId,
     deleted: false,
     createdAt: FieldValue.serverTimestamp(),
@@ -73,7 +82,7 @@ export async function updateAsset(
   await getAdminDb()
     .doc(`families/${familyId}/assets/${assetId}`)
     .update({
-      ...data,
+      ...stripUndefined(data),
       updatedAt: FieldValue.serverTimestamp(),
     });
 }
