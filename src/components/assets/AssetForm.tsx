@@ -73,6 +73,7 @@ export function AssetForm({ action, defaultValues, submitLabel = "Save asset" }:
             type="number"
             step="0.01"
             min="0"
+            inputMode="decimal"
             defaultValue={defaultValues?.amount}
             required
             className="w-full px-4 py-2 border border-gray-300 rounded-lg"

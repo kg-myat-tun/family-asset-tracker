@@ -8,9 +8,9 @@ const NAV_ITEMS = [
   { href: "/members", label: "Members", icon: "👥" },
 ];
 
-export function Sidebar({ family }: { family: Family }) {
+export function Sidebar({ family, onNavigate }: { family: Family; onNavigate?: () => void }) {
   return (
-    <aside className="w-56 bg-white border-r border-gray-200 flex flex-col">
+    <aside className="w-56 h-full bg-white border-r border-gray-200 flex flex-col">
       <div className="p-4 border-b border-gray-200">
         <p className="text-xs text-gray-500 uppercase tracking-wide">Family</p>
         <p className="font-semibold text-gray-900 truncate">{family.name}</p>
@@ -20,7 +20,8 @@ export function Sidebar({ family }: { family: Family }) {
           <Link
             key={item.href}
             href={item.href}
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 text-sm font-medium"
+            onClick={onNavigate}
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 text-sm font-medium min-h-[44px]"
           >
             <span>{item.icon}</span>
             {item.label}

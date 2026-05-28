@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import type { Family, FamilyMember } from "@/types";
 import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
@@ -10,12 +13,31 @@ interface AppShellProps {
 }
 
 export function AppShell({ user, family, children }: AppShellProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar family={family} />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header user={user} family={family} />
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+      <div className="hidden md:block">
+        <Sidebar family={family} />
+      </div>
+
+      {sidebarOpen && (
+        <>
+          <button
+            type="button"
+            aria-label="Close menu"
+            className="fixed inset-0 bg-black/40 z-20 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+          <div className="fixed left-0 top-0 h-full z-30 md:hidden">
+            <Sidebar family={family} onNavigate={() => setSidebarOpen(false)} />
+          </div>
+        </>
+      )}
+
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+        <Header user={user} family={family} onMenuClick={() => setSidebarOpen(true)} />
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
       </div>
     </div>
   );

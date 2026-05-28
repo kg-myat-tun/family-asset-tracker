@@ -55,6 +55,7 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
             type="number"
             step="0.01"
             min="0.01"
+            inputMode="decimal"
             required
             className="w-full px-4 py-2 border border-gray-300 rounded-lg"
           />
@@ -93,6 +94,7 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
             step="0.01"
             min="0"
             max="100"
+            inputMode="decimal"
             className="w-full px-4 py-2 border border-gray-300 rounded-lg"
           />
         </div>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { convertAmount, formatCurrency } from "@/lib/currency.server";
 import type { FamilyMember, Loan } from "@/types";
 
@@ -20,10 +21,12 @@ const STATUS_STYLES = {
 export function LoanList({ loans, memberMap, currentUid, baseCurrency, rates, today }: Props) {
   if (loans.length === 0) {
     return (
-      <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
-        <p className="text-gray-400 text-4xl mb-3">🤝</p>
-        <p className="text-gray-500">No loans yet.</p>
-      </div>
+      <EmptyState
+        icon="🤝"
+        title="No loans yet"
+        description="Track money lent between family members so nothing slips through the cracks."
+        action={{ label: "+ New loan", href: "/loans/new" }}
+      />
     );
   }
 

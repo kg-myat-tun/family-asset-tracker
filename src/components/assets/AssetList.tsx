@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { convertAmount, formatCurrency } from "@/lib/currency.server";
 import type { Asset } from "@/types";
 
@@ -20,10 +21,12 @@ interface Props {
 export function AssetList({ assets, baseCurrency, rates }: Props) {
   if (assets.length === 0) {
     return (
-      <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
-        <p className="text-gray-400 text-4xl mb-3">💰</p>
-        <p className="text-gray-500">No assets yet. Add your first one.</p>
-      </div>
+      <EmptyState
+        icon="💰"
+        title="No assets yet"
+        description="Start tracking your family's wealth by adding your first asset."
+        action={{ label: "+ Add asset", href: "/assets/new" }}
+      />
     );
   }
 
