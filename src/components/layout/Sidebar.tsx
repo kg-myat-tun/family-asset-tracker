@@ -6,6 +6,7 @@ const NAV_ITEMS = [
   { href: "/assets", label: "Assets", icon: "💰" },
   { href: "/loans", label: "Loans", icon: "🤝" },
   { href: "/members", label: "Members", icon: "👥" },
+  { href: "/profile", label: "Profile", icon: "👤" },
 ];
 
 export function Sidebar({ family, onNavigate }: { family: Family; onNavigate?: () => void }) {

@@ -85,7 +85,7 @@ export function LoginForm() {
           <div className="w-full border-t border-line" />
         </div>
         <div className="relative flex justify-center">
-          <span className="bg-card px-3 text-sm text-muted">or</span>
+          <span className="bg-white px-3 text-sm text-muted">or</span>
         </div>
       </div>
 
