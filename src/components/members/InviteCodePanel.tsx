@@ -18,19 +18,19 @@ export function InviteCodePanel({ code }: { code: string }) {
   return (
     <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-center justify-between gap-4">
       <div className="min-w-0">
-        <p className="text-sm font-medium text-gray-900">Family invite code</p>
-        <p className="text-xs text-gray-500">
+        <p className="text-sm font-medium text-foreground">Family invite code</p>
+        <p className="text-xs text-muted">
           Share this code so others can join from the onboarding screen.
         </p>
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
-        <span className="font-mono text-lg tracking-[0.3em] text-gray-900 bg-white border border-gray-200 rounded-lg px-3 py-1.5 select-all">
+        <span className="font-mono text-lg tracking-[0.3em] text-foreground bg-card border border-line rounded-lg px-3 py-1.5 select-all">
           {code}
         </span>
         <button
           type="button"
           onClick={copyCode}
-          className="text-sm px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="text-sm px-3 py-1.5 bg-accent text-white rounded-lg hover:bg-accent-strong"
         >
           {copied ? "Copied!" : "Copy"}
         </button>

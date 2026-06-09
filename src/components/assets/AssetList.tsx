@@ -30,28 +30,71 @@ export function AssetList({ assets, baseCurrency, rates }: Props) {
     );
   }
 
+  const rows = assets.map((asset) => ({
+    asset,
+    base: convertAmount(asset.amount, asset.currency, baseCurrency, rates),
+  }));
+  const total = rows.reduce((sum, r) => sum + r.base, 0) || 1;
+
   return (
-    <div className="space-y-3">
-      {assets.map((asset) => {
-        const converted = convertAmount(asset.amount, asset.currency, baseCurrency, rates);
+    <div className="space-y-2.5">
+      {rows.map(({ asset, base }) => {
+        const share = Math.round((base / total) * 100);
         return (
-          <Link key={asset.id} href={`/assets/${asset.id}`}>
-            <div className="bg-white rounded-xl border border-gray-200 p-4 hover:border-blue-300 transition-colors flex items-center gap-4">
-              <span className="text-2xl">{CATEGORY_ICONS[asset.category]}</span>
+          <Link key={asset.id} href={`/assets/${asset.id}`} className="block">
+            <div className="card card-hover p-4 flex items-center gap-4">
+              <span className="icon-chip text-xl shrink-0">{CATEGORY_ICONS[asset.category]}</span>
+
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 truncate">{asset.name}</p>
-                <p className="text-sm text-gray-500 capitalize">{asset.category}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold text-foreground truncate">{asset.name}</p>
+                  <span className="hidden sm:inline shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full bg-accent-soft text-accent-strong capitalize">
+                    {asset.category}
+                  </span>
+                  {asset.visibility === "private" && (
+                    <span
+                      className="shrink-0 text-xs text-muted/70"
+                      title="Private — only visible to you"
+                    >
+                      🔒
+                    </span>
+                  )}
+                </div>
+                <div className="mt-2 flex items-center gap-2 max-w-[16rem]">
+                  <div className="h-1.5 flex-1 rounded-full bg-foreground/6 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-accent"
+                      style={{ width: `${Math.max(share, 2)}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-muted tabular-nums w-9 text-right">{share}%</span>
+                </div>
               </div>
-              <div className="text-right flex-shrink-0">
-                <p className="font-semibold text-gray-900">
+
+              <div className="text-right shrink-0">
+                <p className="font-semibold text-foreground tabular-nums">
                   {formatCurrency(asset.amount, asset.currency)}
                 </p>
                 {asset.currency !== baseCurrency && (
-                  <p className="text-xs text-gray-400">
-                    ≈ {formatCurrency(converted, baseCurrency)}
+                  <p className="text-xs text-muted tabular-nums">
+                    ≈ {formatCurrency(base, baseCurrency)}
                   </p>
                 )}
               </div>
+
+              <svg
+                className="w-4 h-4 text-muted/60 shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <title>Open</title>
+                <path d="m9 18 6-6-6-6" />
+              </svg>
             </div>
           </Link>
         );

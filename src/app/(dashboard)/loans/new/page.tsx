@@ -12,7 +12,7 @@ export default async function NewLoanPage() {
 
   return (
     <div className="max-w-xl">
-      <h1 className="text-2xl font-semibold text-gray-900 mb-6">New loan</h1>
+      <h1 className="text-2xl font-semibold text-foreground mb-6">New loan</h1>
       <LoanForm candidates={candidates} defaultCurrency={family.baseCurrency} />
     </div>
   );

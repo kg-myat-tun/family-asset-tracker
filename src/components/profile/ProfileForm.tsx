@@ -17,7 +17,7 @@ export function ProfileForm({ defaultDisplayName, email }: Props) {
   return (
     <form action={formAction} className="space-y-5">
       <div>
-        <label htmlFor="profile-name" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="profile-name" className="block text-sm font-medium text-foreground/80 mb-1">
           Display name
         </label>
         <input
@@ -26,18 +26,18 @@ export function ProfileForm({ defaultDisplayName, email }: Props) {
           defaultValue={defaultDisplayName}
           required
           maxLength={60}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-soft"
         />
         {state && "errors" in state && state.errors?.displayName && (
           <p className="text-sm text-red-500 mt-1">{state.errors.displayName[0]}</p>
         )}
-        <p className="text-xs text-gray-400 mt-1">
+        <p className="text-xs text-muted mt-1">
           Shown to other family members on the Members page and activity feed.
         </p>
       </div>
 
       <div>
-        <label htmlFor="profile-email" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="profile-email" className="block text-sm font-medium text-foreground/80 mb-1">
           Email
         </label>
         <input
@@ -45,9 +45,9 @@ export function ProfileForm({ defaultDisplayName, email }: Props) {
           value={email}
           readOnly
           disabled
-          className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500"
+          className="w-full px-4 py-2 border border-line rounded-lg bg-background text-muted"
         />
-        <p className="text-xs text-gray-400 mt-1">Email is managed by your sign-in provider.</p>
+        <p className="text-xs text-muted mt-1">Email is managed by your sign-in provider.</p>
       </div>
 
       {state && "success" in state && state.success && (
@@ -57,7 +57,7 @@ export function ProfileForm({ defaultDisplayName, email }: Props) {
       <button
         type="submit"
         disabled={pending}
-        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm"
+        className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-strong disabled:opacity-50 text-sm"
       >
         {pending ? "Saving..." : "Save changes"}
       </button>

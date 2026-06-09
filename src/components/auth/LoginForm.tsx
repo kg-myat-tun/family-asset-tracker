@@ -48,7 +48,7 @@ export function LoginForm() {
             placeholder="you@example.com"
             autoComplete="email"
             required
-            className="w-full rounded-2xl border border-line bg-white px-4 py-3 text-sm text-foreground outline-none transition focus:border-accent focus:ring-4 focus:ring-accent-soft"
+            className="w-full rounded-2xl border border-line bg-card px-4 py-3 text-sm text-foreground outline-none transition focus:border-accent focus:ring-4 focus:ring-accent-soft"
           />
         </label>
 
@@ -61,7 +61,7 @@ export function LoginForm() {
             placeholder="Your password"
             autoComplete="current-password"
             required
-            className="w-full rounded-2xl border border-line bg-white px-4 py-3 text-sm text-foreground outline-none transition focus:border-accent focus:ring-4 focus:ring-accent-soft"
+            className="w-full rounded-2xl border border-line bg-card px-4 py-3 text-sm text-foreground outline-none transition focus:border-accent focus:ring-4 focus:ring-accent-soft"
           />
         </label>
 
@@ -85,7 +85,7 @@ export function LoginForm() {
           <div className="w-full border-t border-line" />
         </div>
         <div className="relative flex justify-center">
-          <span className="bg-white px-3 text-sm text-muted">or</span>
+          <span className="bg-card px-3 text-sm text-muted">or</span>
         </div>
       </div>
 
@@ -93,7 +93,7 @@ export function LoginForm() {
         type="button"
         onClick={handleGoogleLogin}
         disabled={loading}
-        className="flex w-full items-center justify-center gap-3 rounded-full border border-line bg-white px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-accent-soft disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex w-full items-center justify-center gap-3 rounded-full border border-line bg-card px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-accent-soft disabled:cursor-not-allowed disabled:opacity-60"
       >
         Continue with Google
       </button>

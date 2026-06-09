@@ -14,12 +14,12 @@ export function InviteForm() {
         placeholder="name@example.com"
         required
         aria-label="Invite by email"
-        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="px-3 py-2 border border-line rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent-soft"
       />
       <button
         type="submit"
         disabled={pending}
-        className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50"
+        className="px-4 py-2 bg-accent text-white rounded-lg text-sm hover:bg-accent-strong disabled:opacity-50"
       >
         {pending ? "Inviting..." : "Invite"}
       </button>

@@ -15,8 +15,8 @@ export default function LoansError({
 
   return (
     <div className="text-center py-16">
-      <p className="text-gray-500 mb-4">Failed to load loans: {error.message}</p>
-      <button type="button" onClick={reset} className="text-blue-600 hover:underline">
+      <p className="text-muted mb-4">Failed to load loans: {error.message}</p>
+      <button type="button" onClick={reset} className="text-accent hover:underline">
         Try again
       </button>
     </div>

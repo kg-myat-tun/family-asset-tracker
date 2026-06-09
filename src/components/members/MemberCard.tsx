@@ -19,17 +19,17 @@ const ROLE_LABELS: Record<Role, string> = {
 const ROLE_COLORS: Record<Role, string> = {
   admin: "bg-purple-100 text-purple-700",
   member: "bg-blue-100 text-blue-700",
-  viewer: "bg-gray-100 text-gray-700",
+  viewer: "bg-foreground/6 text-foreground/80",
 };
 
 export function MemberCard({ member, isAdmin, isSelf }: Props) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
-      <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+    <div className="card p-4 flex items-center gap-4">
+      <div className="w-11 h-11 rounded-full bg-accent-soft text-accent-strong overflow-hidden shrink-0">
         {member.photoURL ? (
-          <Image src={member.photoURL} alt={member.displayName} width={40} height={40} />
+          <Image src={member.photoURL} alt={member.displayName} width={44} height={44} />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-500 font-medium">
+          <div className="w-full h-full flex items-center justify-center font-semibold">
             {member.displayName[0]?.toUpperCase()}
           </div>
         )}
@@ -37,11 +37,11 @@ export function MemberCard({ member, isAdmin, isSelf }: Props) {
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <p className="font-medium text-gray-900 truncate">{member.displayName}</p>
-          {isSelf && <span className="text-xs text-gray-400">(you)</span>}
+          <p className="font-semibold text-foreground truncate">{member.displayName}</p>
+          {isSelf && <span className="text-xs text-muted">(you)</span>}
         </div>
-        <p className="text-sm text-gray-500 truncate">{member.email}</p>
-        <p className="text-xs text-gray-400">{member.assetCount} assets</p>
+        <p className="text-sm text-muted truncate">{member.email}</p>
+        <p className="text-xs text-muted">{member.assetCount} assets</p>
       </div>
 
       <span className={`text-xs px-2 py-1 rounded-full font-medium ${ROLE_COLORS[member.role]}`}>
@@ -59,7 +59,7 @@ export function MemberCard({ member, isAdmin, isSelf }: Props) {
                 const form = e.target.closest("form") as HTMLFormElement | null;
                 form?.requestSubmit();
               }}
-              className="text-sm border border-gray-300 rounded-lg px-2 py-1"
+              className="text-sm border border-line rounded-lg px-2 py-1"
               aria-label={`Role for ${member.displayName}`}
             >
               <option value="admin">Admin</option>

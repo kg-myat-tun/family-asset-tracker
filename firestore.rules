@@ -1,0 +1,18 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // All writes and the bulk of reads go through the Admin SDK (server-side),
+    // which bypasses these rules. The client SDK only reads the activity feed,
+    // so that is the only path we open up here. Everything else stays denied.
+
+    function isMember(familyId) {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/families/$(familyId)/members/$(request.auth.uid));
+    }
+
+    match /families/{familyId}/activity/{activityId} {
+      allow read: if isMember(familyId);
+    }
+  }
+}

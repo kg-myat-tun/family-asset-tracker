@@ -11,7 +11,7 @@ interface Props {
 
 export function NetWorthChart({ data, currency }: Props) {
   if (data.length === 0 || data.every((d) => d.value === 0)) {
-    return <p className="text-gray-400 text-sm">No asset data yet.</p>;
+    return <p className="text-muted text-sm">No asset data yet.</p>;
   }
 
   return (

@@ -2,7 +2,8 @@ import "server-only";
 
 import { FieldValue, type Query } from "firebase-admin/firestore";
 import { getAdminDb } from "@/firebase/admin";
-import type { Asset, AssetCategory } from "@/types";
+import { canViewAsset } from "@/lib/visibility";
+import type { Asset, AssetCategory, Visibility } from "@/types";
 
 function docToAsset(doc: FirebaseFirestore.DocumentSnapshot): Asset {
   const d = doc.data();
@@ -16,13 +17,18 @@ function docToAsset(doc: FirebaseFirestore.DocumentSnapshot): Asset {
     amount: d.amount,
     description: d.description ?? "",
     attachmentURL: d.attachmentURL ?? null,
+    visibility: d.visibility ?? "shared",
     deleted: d.deleted ?? false,
     createdAt: d.createdAt.toDate(),
     updatedAt: d.updatedAt.toDate(),
   };
 }
 
-export async function getAssets(familyId: string, ownerId?: string): Promise<Asset[]> {
+export async function getAssets(
+  familyId: string,
+  viewerUid: string,
+  ownerId?: string,
+): Promise<Asset[]> {
   let query: Query = getAdminDb()
     .collection(`families/${familyId}/assets`)
     .where("deleted", "==", false)
@@ -31,7 +37,7 @@ export async function getAssets(familyId: string, ownerId?: string): Promise<Ass
   if (ownerId) query = query.where("ownerId", "==", ownerId);
 
   const snap = await query.get();
-  return snap.docs.map(docToAsset);
+  return snap.docs.map(docToAsset).filter((a) => canViewAsset(a, viewerUid));
 }
 
 export async function getAsset(familyId: string, assetId: string): Promise<Asset | null> {
@@ -58,6 +64,7 @@ export async function createAsset(
     amount: number;
     description: string;
     attachmentURL?: string | null;
+    visibility: Visibility;
   },
 ): Promise<string> {
   const ref = getAdminDb().collection(`families/${familyId}/assets`).doc();
@@ -76,7 +83,10 @@ export async function updateAsset(
   familyId: string,
   assetId: string,
   data: Partial<
-    Pick<Asset, "name" | "category" | "currency" | "amount" | "description" | "attachmentURL">
+    Pick<
+      Asset,
+      "name" | "category" | "currency" | "amount" | "description" | "attachmentURL" | "visibility"
+    >
   >,
 ): Promise<void> {
   await getAdminDb()

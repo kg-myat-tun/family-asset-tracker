@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DeleteAssetButton } from "@/components/assets/DeleteAssetButton";
+import { VisibilityBadge } from "@/components/ui/VisibilityBadge";
 import { getAsset } from "@/lib/assets.server";
 import { requireUser } from "@/lib/auth.server";
 import { convertAmount, formatCurrency, getCachedRates } from "@/lib/currency.server";
 import { getFamilyForUser, getFamilyMembers } from "@/lib/family.server";
+import { canViewAsset } from "@/lib/visibility";
 
 export default async function AssetDetailPage({
   params,
@@ -17,7 +19,7 @@ export default async function AssetDetailPage({
   if (!family) return null;
 
   const asset = await getAsset(family.id, assetId);
-  if (!asset) notFound();
+  if (!asset || !canViewAsset(asset, user.uid)) notFound();
 
   const [rates, members] = await Promise.all([
     getCachedRates(family.id),
@@ -32,12 +34,15 @@ export default async function AssetDetailPage({
   return (
     <div className="max-w-2xl space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">{asset.name}</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-semibold text-foreground">{asset.name}</h1>
+          <VisibilityBadge visibility={asset.visibility} />
+        </div>
         {canMutate && (
           <div className="flex items-center gap-3">
             <Link
               href={`/assets/${asset.id}/edit`}
-              className="text-sm text-blue-600 hover:underline"
+              className="text-sm text-accent hover:underline"
             >
               Edit
             </Link>
@@ -46,7 +51,7 @@ export default async function AssetDetailPage({
         )}
       </div>
 
-      <dl className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+      <dl className="bg-card rounded-xl border border-line divide-y divide-line">
         <Row label="Category">
           <span className="capitalize">{asset.category}</span>
         </Row>
@@ -54,7 +59,7 @@ export default async function AssetDetailPage({
           <div>
             <p className="font-semibold">{formatCurrency(asset.amount, asset.currency)}</p>
             {asset.currency !== family.baseCurrency && (
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-muted">
                 ≈ {formatCurrency(converted, family.baseCurrency)}
               </p>
             )}
@@ -70,8 +75,8 @@ export default async function AssetDetailPage({
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-start justify-between gap-6 px-4 py-3 text-sm">
-      <dt className="text-gray-500">{label}</dt>
-      <dd className="text-gray-900 text-right">{children}</dd>
+      <dt className="text-muted">{label}</dt>
+      <dd className="text-foreground text-right">{children}</dd>
     </div>
   );
 }

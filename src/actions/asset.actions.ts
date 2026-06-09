@@ -8,6 +8,7 @@ import { createAsset, getAsset, softDeleteAsset, updateAsset } from "@/lib/asset
 import { requireUser } from "@/lib/auth.server";
 import { formatCurrency } from "@/lib/currency.server";
 import { getFamilyForUser, getFamilyMembers } from "@/lib/family.server";
+import { canViewAsset } from "@/lib/visibility";
 
 export type AssetFormState = { errors?: Record<string, string[]> } | null;
 
@@ -18,6 +19,7 @@ const AssetSchema = z.object({
   amount: z.coerce.number().positive("Amount must be positive"),
   description: z.string().max(500).optional().default(""),
   attachmentURL: z.string().url().optional().or(z.literal("")),
+  visibility: z.enum(["private", "shared"]).default("shared"),
 });
 
 async function getContextOrThrow() {
@@ -66,7 +68,9 @@ export async function updateAssetAction(
   const { user, family } = await getContextOrThrow();
 
   const existing = await getAsset(family.id, assetId);
-  if (!existing) return { errors: { _: ["Asset not found"] } };
+  if (!existing || !canViewAsset(existing, user.uid)) {
+    return { errors: { _: ["Asset not found"] } };
+  }
 
   await assertCanMutate(family.id, existing.ownerId, user.uid);
 
@@ -89,7 +93,7 @@ export async function deleteAssetAction(assetId: string): Promise<void> {
   const { user, family } = await getContextOrThrow();
 
   const existing = await getAsset(family.id, assetId);
-  if (!existing) throw new Error("Not found");
+  if (!existing || !canViewAsset(existing, user.uid)) throw new Error("Not found");
 
   await assertCanMutate(family.id, existing.ownerId, user.uid);
 

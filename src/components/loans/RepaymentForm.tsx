@@ -10,12 +10,12 @@ export function RepaymentForm({ loanId, loanCurrency }: { loanId: string; loanCu
   const [state, formAction, pending] = useActionState<LoanFormState, FormData>(action, null);
 
   return (
-    <form action={formAction} className="space-y-4 bg-gray-50 rounded-xl p-4">
-      <h3 className="font-medium text-gray-900">Record repayment</h3>
+    <form action={formAction} className="space-y-4 bg-background rounded-xl p-4">
+      <h3 className="font-medium text-foreground">Record repayment</h3>
 
       <div className="flex gap-3">
         <div className="flex-1">
-          <label htmlFor="repay-amount" className="block text-sm text-gray-600 mb-1">
+          <label htmlFor="repay-amount" className="block text-sm text-muted mb-1">
             Amount paid
           </label>
           <input
@@ -26,21 +26,21 @@ export function RepaymentForm({ loanId, loanCurrency }: { loanId: string; loanCu
             min="0.01"
             inputMode="decimal"
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="w-full px-3 py-2 border border-line rounded-lg text-sm"
           />
           {state?.errors?.amount && (
             <p className="text-xs text-red-500 mt-1">{state.errors.amount[0]}</p>
           )}
         </div>
         <div className="w-28">
-          <label htmlFor="repay-currency" className="block text-sm text-gray-600 mb-1">
+          <label htmlFor="repay-currency" className="block text-sm text-muted mb-1">
             Currency
           </label>
           <select
             id="repay-currency"
             name="currency"
             defaultValue={loanCurrency}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="w-full px-3 py-2 border border-line rounded-lg text-sm"
           >
             {COMMON_CURRENCIES.map((c) => (
               <option key={c} value={c}>
@@ -52,14 +52,14 @@ export function RepaymentForm({ loanId, loanCurrency }: { loanId: string; loanCu
       </div>
 
       <div>
-        <label htmlFor="repay-note" className="block text-sm text-gray-600 mb-1">
+        <label htmlFor="repay-note" className="block text-sm text-muted mb-1">
           Note (optional)
         </label>
         <input
           id="repay-note"
           name="note"
           placeholder="e.g. Cash payment"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          className="w-full px-3 py-2 border border-line rounded-lg text-sm"
         />
       </div>
 

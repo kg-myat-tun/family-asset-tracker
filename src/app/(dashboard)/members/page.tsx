@@ -12,7 +12,7 @@ export default async function MembersPage() {
 
   const members = await getFamilyMembers(family.id);
   const membersWithCounts = await Promise.all(
-    members.map((m) => getMemberWithAssetCount(family.id, m.uid)),
+    members.map((m) => getMemberWithAssetCount(family.id, m.uid, user.uid)),
   );
 
   const currentMember = membersWithCounts.find((m) => m.uid === user.uid);
@@ -21,7 +21,7 @@ export default async function MembersPage() {
   return (
     <div className="max-w-3xl space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">Members</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Members</h1>
         {isAdmin && <InviteForm />}
       </div>
 
