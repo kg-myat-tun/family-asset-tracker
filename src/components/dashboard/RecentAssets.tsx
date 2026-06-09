@@ -4,25 +4,28 @@ import type { Asset } from "@/types";
 
 export function RecentAssets({ assets }: { assets: Asset[] }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="font-semibold text-gray-900">Recent assets</h2>
-        <Link href="/assets" className="text-sm text-blue-600 hover:underline">
-          View all
+    <div className="card p-6">
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-3">
+          <span className="icon-chip">💰</span>
+          <h2 className="font-semibold text-foreground">Recent assets</h2>
+        </div>
+        <Link href="/assets" className="text-sm font-medium text-accent hover:text-accent-strong">
+          View all →
         </Link>
       </div>
       {assets.length === 0 ? (
-        <p className="text-gray-400 text-sm">No assets yet.</p>
+        <p className="text-muted text-sm">No assets yet.</p>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-1">
           {assets.map((a) => (
             <Link
               key={a.id}
               href={`/assets/${a.id}`}
-              className="flex justify-between text-sm hover:text-blue-600"
+              className="flex justify-between items-center text-sm -mx-2 px-2 py-2 rounded-lg hover:bg-accent-soft/50 transition-colors"
             >
-              <span className="text-gray-700 truncate">{a.name}</span>
-              <span className="font-medium ml-4 flex-shrink-0">
+              <span className="text-foreground/80 truncate">{a.name}</span>
+              <span className="font-semibold text-foreground ml-4 shrink-0">
                 {formatCurrency(a.amount, a.currency)}
               </span>
             </Link>

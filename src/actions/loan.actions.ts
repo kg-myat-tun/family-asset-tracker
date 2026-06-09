@@ -18,17 +18,41 @@ async function getContextOrThrow() {
   return { user, family };
 }
 
-const CreateLoanSchema = z.object({
-  borrowerId: z.string().min(1, "Select a borrower"),
-  currency: z.string().length(3),
-  principalAmount: z.coerce.number().positive("Amount must be positive"),
-  interestRate: z.coerce.number().min(0).max(100).optional(),
-  description: z.string().min(1, "Description is required").max(300),
-  dueDate: z
-    .string()
-    .optional()
-    .transform((v) => (v ? new Date(v) : undefined)),
-});
+const CreateLoanSchema = z
+  .object({
+    // "lent" = you lent to the counterparty; "borrowed" = you borrowed from them.
+    direction: z.enum(["lent", "borrowed"]),
+    // Counterparty is either an existing family member or an external person/org.
+    counterpartyType: z.enum(["member", "external"]),
+    counterpartyId: z.string().optional(),
+    counterpartyName: z.string().max(120).optional(),
+    visibility: z.enum(["private", "shared"]).default("shared"),
+    currency: z.string().length(3),
+    principalAmount: z.coerce.number().positive("Amount must be positive"),
+    interestRate: z.coerce.number().min(0).max(100).optional(),
+    description: z.string().min(1, "Description is required").max(300),
+    dueDate: z
+      .string()
+      .optional()
+      .transform((v) => (v ? new Date(v) : undefined)),
+  })
+  .superRefine((data, ctx) => {
+    if (data.counterpartyType === "member") {
+      if (!data.counterpartyId) {
+        ctx.addIssue({
+          path: ["counterpartyId"],
+          code: z.ZodIssueCode.custom,
+          message: "Select a family member",
+        });
+      }
+    } else if (!data.counterpartyName?.trim()) {
+      ctx.addIssue({
+        path: ["counterpartyName"],
+        code: z.ZodIssueCode.custom,
+        message: "Enter a name",
+      });
+    }
+  });
 
 export async function createLoanAction(
   _prevState: LoanFormState,
@@ -44,27 +68,54 @@ export async function createLoanAction(
   const parsed = CreateLoanSchema.safeParse(raw);
   if (!parsed.success) return { errors: parsed.error.flatten().fieldErrors };
 
-  if (parsed.data.borrowerId === user.uid) {
-    return { errors: { borrowerId: ["You cannot lend to yourself"] } };
+  const { direction, counterpartyType, counterpartyId, currency, principalAmount } = parsed.data;
+  const members = await getFamilyMembers(family.id);
+
+  // Resolve the counterparty (the non-you side) into an id (member) or name (external).
+  let counterId: string | null = null;
+  let counterName: string | null = null;
+
+  if (counterpartyType === "member") {
+    if (counterpartyId === user.uid) {
+      return { errors: { counterpartyId: ["You cannot pick yourself"] } };
+    }
+    if (!members.find((m) => m.uid === counterpartyId)) {
+      return { errors: { counterpartyId: ["That person is not in your family"] } };
+    }
+    counterId = counterpartyId ?? null;
+  } else {
+    counterName = parsed.data.counterpartyName?.trim() ?? null;
   }
 
-  const members = await getFamilyMembers(family.id);
-  if (!members.find((m) => m.uid === parsed.data.borrowerId)) {
-    return { errors: { borrowerId: ["Borrower is not in your family"] } };
-  }
+  // You are always one party; the counterparty is the other, per direction.
+  const party = {
+    lenderId: direction === "lent" ? user.uid : counterId,
+    borrowerId: direction === "lent" ? counterId : user.uid,
+    lenderName: direction === "lent" ? null : counterName,
+    borrowerName: direction === "lent" ? counterName : null,
+  };
 
   const loanId = await createLoan(family.id, {
-    lenderId: user.uid,
-    ...parsed.data,
+    ...party,
+    visibility: parsed.data.visibility,
+    currency: parsed.data.currency,
+    principalAmount: parsed.data.principalAmount,
+    interestRate: parsed.data.interestRate,
+    description: parsed.data.description,
+    dueDate: parsed.data.dueDate,
   });
 
-  const borrower = members.find((m) => m.uid === parsed.data.borrowerId);
-  const lender = members.find((m) => m.uid === user.uid);
-  await logActivity(
-    family.id,
-    "loan_created",
-    `${lender?.displayName ?? "Someone"} lent ${formatCurrency(parsed.data.principalAmount, parsed.data.currency)} to ${borrower?.displayName ?? "someone"}`,
-  );
+  const selfName = members.find((m) => m.uid === user.uid)?.displayName ?? "Someone";
+  const counterLabel =
+    counterpartyType === "member"
+      ? (members.find((m) => m.uid === counterId)?.displayName ?? "someone")
+      : (counterName ?? "someone");
+  const amount = formatCurrency(principalAmount, currency);
+  const message =
+    direction === "lent"
+      ? `${selfName} lent ${amount} to ${counterLabel}`
+      : `${selfName} borrowed ${amount} from ${counterLabel}`;
+  await logActivity(family.id, "loan_created", message);
 
   revalidatePath("/loans");
   redirect(`/loans/${loanId}`);

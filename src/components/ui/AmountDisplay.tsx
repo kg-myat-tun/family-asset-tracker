@@ -20,11 +20,11 @@ export function AmountDisplay({ amount, currency, baseCurrency, rates, size = "m
 
   return (
     <div>
-      <p className={`font-semibold text-gray-900 ${SIZE_CLASS[size]}`}>
+      <p className={`font-semibold text-foreground ${SIZE_CLASS[size]}`}>
         {formatCurrency(amount, currency)}
       </p>
       {converted !== null && (
-        <p className="text-xs text-gray-400">≈ {formatCurrency(converted, baseCurrency)}</p>
+        <p className="text-xs text-muted">≈ {formatCurrency(converted, baseCurrency)}</p>
       )}
     </div>
   );

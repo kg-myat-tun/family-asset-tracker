@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth.server";
 import { getCachedRates } from "@/lib/currency.server";
 import { getFamilyForUser, getFamilyMembers } from "@/lib/family.server";
 import { getLoan, getRepayments } from "@/lib/loans.server";
+import { canViewLoan } from "@/lib/visibility";
 
 export default async function LoanDetailPage({ params }: { params: Promise<{ loanId: string }> }) {
   const { loanId } = await params;
@@ -18,7 +19,7 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ loa
     getCachedRates(family.id),
   ]);
 
-  if (!loan) notFound();
+  if (!loan || !canViewLoan(loan, user.uid)) notFound();
 
   const memberMap = Object.fromEntries(members.map((m) => [m.uid, m]));
   const canAct = loan.lenderId === user.uid || loan.borrowerId === user.uid;

@@ -2,6 +2,7 @@ import "server-only";
 
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminAuth, getAdminDb } from "@/firebase/admin";
+import { canViewAsset } from "@/lib/visibility";
 import type { FamilyMember, Role } from "@/types";
 
 export async function inviteMember(
@@ -76,6 +77,7 @@ export async function removeMember(familyId: string, targetUid: string): Promise
 export async function getMemberWithAssetCount(
   familyId: string,
   uid: string,
+  viewerUid: string,
 ): Promise<FamilyMember & { assetCount: number }> {
   const db = getAdminDb();
   const [memberSnap, assetsSnap] = await Promise.all([
@@ -90,6 +92,11 @@ export async function getMemberWithAssetCount(
   const d = memberSnap.data();
   if (!d) throw new Error("Member not found");
 
+  // Only count assets the viewer is allowed to see (their own private ones + shared).
+  const assetCount = assetsSnap.docs.filter((doc) =>
+    canViewAsset({ ownerId: uid, visibility: doc.data().visibility ?? "shared" }, viewerUid),
+  ).length;
+
   return {
     uid,
     displayName: d.displayName,
@@ -98,6 +105,6 @@ export async function getMemberWithAssetCount(
     role: d.role,
     status: d.status,
     joinedAt: d.joinedAt.toDate(),
-    assetCount: assetsSnap.size,
+    assetCount,
   };
 }

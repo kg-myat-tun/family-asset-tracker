@@ -42,27 +42,30 @@ export function ActivityFeed({ familyId }: { familyId: string }) {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-3 animate-pulse">
+      <div className="card p-6 space-y-3 animate-pulse">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-4 bg-gray-100 rounded" />
+          <div key={i} className="h-4 bg-foreground/6 rounded" />
         ))}
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-6">
-      <h2 className="font-semibold text-gray-900 mb-4">Recent activity</h2>
+    <div className="card p-6">
+      <div className="flex items-center gap-3 mb-5">
+        <span className="icon-chip">🕑</span>
+        <h2 className="font-semibold text-foreground">Recent activity</h2>
+      </div>
       {items.length === 0 ? (
-        <p className="text-gray-400 text-sm">No activity yet.</p>
+        <p className="text-muted text-sm">No activity yet.</p>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {items.map((item) => (
             <div key={item.id} className="flex gap-3 items-start">
-              <div className="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 flex-shrink-0" />
+              <div className="w-2 h-2 bg-accent rounded-full mt-1.5 shrink-0 ring-4 ring-accent-soft" />
               <div>
-                <p className="text-sm text-gray-700">{item.description}</p>
-                <p className="text-xs text-gray-400">
+                <p className="text-sm text-foreground/80">{item.description}</p>
+                <p className="text-xs text-muted mt-0.5">
                   {item.createdAt.toLocaleDateString()} at{" "}
                   {item.createdAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                 </p>

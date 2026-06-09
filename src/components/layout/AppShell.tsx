@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Family, FamilyMember } from "@/types";
+import { Breadcrumbs } from "./Breadcrumbs";
 import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
 
@@ -16,7 +17,7 @@ export function AppShell({ user, family, children }: AppShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-background">
       <div className="hidden md:block">
         <Sidebar family={family} />
       </div>
@@ -37,7 +38,10 @@ export function AppShell({ user, family, children }: AppShellProps) {
 
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <Header user={user} family={family} onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+          <Breadcrumbs />
+          {children}
+        </main>
       </div>
     </div>
   );

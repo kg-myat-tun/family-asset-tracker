@@ -11,12 +11,12 @@ export default async function ProfilePage() {
   return (
     <div className="max-w-xl space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Your profile</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-semibold text-foreground">Your profile</h1>
+        <p className="text-sm text-muted mt-1">
           Update how you appear to the rest of your family.
         </p>
       </div>
-      <div className="bg-white rounded-2xl border border-gray-200 p-6">
+      <div className="bg-card rounded-2xl border border-line p-6">
         <ProfileForm defaultDisplayName={profile.displayName} email={profile.email} />
       </div>
     </div>

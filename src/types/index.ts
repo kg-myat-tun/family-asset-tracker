@@ -2,6 +2,9 @@ export type Role = "admin" | "member" | "viewer";
 export type MemberStatus = "active" | "invited" | "removed";
 export type AssetCategory = "cash" | "bank" | "investment" | "property" | "crypto" | "other";
 export type LoanStatus = "active" | "partially_paid" | "settled";
+// "shared" = visible to the whole family; "private" = visible only to the
+// owner (assets) or loan participants. Legacy docs without the field are shared.
+export type Visibility = "private" | "shared";
 
 export interface FamilyMember {
   uid: string;
@@ -31,6 +34,7 @@ export interface Asset {
   amount: number;
   description: string;
   attachmentURL: string | null;
+  visibility: Visibility;
   deleted: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -38,8 +42,13 @@ export interface Asset {
 
 export interface Loan {
   id: string;
-  lenderId: string;
-  borrowerId: string;
+  // A party is either a family member (id set, name null) or an external
+  // person/org (id null, name set). At least one side is always a family member.
+  lenderId: string | null;
+  borrowerId: string | null;
+  lenderName: string | null;
+  borrowerName: string | null;
+  visibility: Visibility;
   currency: string;
   principalAmount: number;
   remainingAmount: number;

@@ -3,15 +3,18 @@ import "server-only";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/firebase/admin";
 import { convertAmount, getCachedRates } from "@/lib/currency.server";
-import type { Loan, LoanStatus, Repayment } from "@/types";
+import type { Loan, LoanStatus, Repayment, Visibility } from "@/types";
 
 function docToLoan(doc: FirebaseFirestore.DocumentSnapshot): Loan {
   const d = doc.data();
   if (!d) throw new Error("Loan doc empty");
   return {
     id: doc.id,
-    lenderId: d.lenderId,
-    borrowerId: d.borrowerId,
+    lenderId: d.lenderId ?? null,
+    borrowerId: d.borrowerId ?? null,
+    lenderName: d.lenderName ?? null,
+    borrowerName: d.borrowerName ?? null,
+    visibility: d.visibility ?? "shared",
     currency: d.currency,
     principalAmount: d.principalAmount,
     remainingAmount: d.remainingAmount,
@@ -65,8 +68,11 @@ export async function getRepayments(familyId: string, loanId: string): Promise<R
 export async function createLoan(
   familyId: string,
   data: {
-    lenderId: string;
-    borrowerId: string;
+    lenderId: string | null;
+    borrowerId: string | null;
+    lenderName?: string | null;
+    borrowerName?: string | null;
+    visibility: Visibility;
     currency: string;
     principalAmount: number;
     interestRate?: number;
@@ -77,6 +83,10 @@ export async function createLoan(
   const ref = getAdminDb().collection(`families/${familyId}/loans`).doc();
   await ref.set({
     ...data,
+    lenderId: data.lenderId ?? null,
+    borrowerId: data.borrowerId ?? null,
+    lenderName: data.lenderName ?? null,
+    borrowerName: data.borrowerName ?? null,
     remainingAmount: data.principalAmount,
     status: "active" as LoanStatus,
     dueDate: data.dueDate ?? null,

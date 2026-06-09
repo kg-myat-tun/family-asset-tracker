@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { convertAmount, formatCurrency } from "@/lib/currency.server";
+import { borrowerName, isExternalParty, lenderName } from "@/lib/loan-party";
 import type { FamilyMember, Loan } from "@/types";
 
 interface Props {
@@ -34,17 +35,25 @@ export function LoanList({ loans, memberMap, currentUid, baseCurrency, rates, to
     <div className="space-y-3">
       {loans.map((loan) => {
         const isLender = loan.lenderId === currentUid;
-        const otherUid = isLender ? loan.borrowerId : loan.lenderId;
-        const other = memberMap[otherUid];
+        const isBorrower = loan.borrowerId === currentUid;
+        const relation = isLender
+          ? { verb: "You lent to", who: borrowerName(loan, memberMap), external: isExternalParty(loan.borrowerId) }
+          : isBorrower
+            ? { verb: "You owe", who: lenderName(loan, memberMap), external: isExternalParty(loan.lenderId) }
+            : {
+                verb: `${lenderName(loan, memberMap)} →`,
+                who: borrowerName(loan, memberMap),
+                external: isExternalParty(loan.lenderId) || isExternalParty(loan.borrowerId),
+              };
         const isOverdue = loan.dueDate && loan.dueDate < today && loan.status !== "settled";
 
         return (
           <Link key={loan.id} href={`/loans/${loan.id}`}>
-            <div className="bg-white rounded-xl border border-gray-200 p-4 hover:border-blue-300 transition-colors">
+            <div className="card card-hover p-4">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-medium text-gray-900 truncate">{loan.description}</p>
+                    <p className="font-semibold text-foreground truncate">{loan.description}</p>
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_STYLES[loan.status]}`}
                     >
@@ -55,20 +64,31 @@ export function LoanList({ loans, memberMap, currentUid, baseCurrency, rates, to
                         overdue
                       </span>
                     )}
+                    {loan.visibility === "private" && (
+                      <span
+                        className="text-xs text-muted/70"
+                        title="Private — only visible to participants"
+                      >
+                        🔒
+                      </span>
+                    )}
                   </div>
-                  <p className="text-sm text-gray-500 mt-0.5">
-                    {isLender ? "You lent to" : "You owe"}{" "}
-                    <span className="font-medium text-gray-700">
-                      {other?.displayName ?? "Unknown"}
-                    </span>
+                  <p className="text-sm text-muted mt-0.5">
+                    {relation.verb}{" "}
+                    <span className="font-medium text-foreground/80">{relation.who}</span>
+                    {relation.external && (
+                      <span className="ml-1.5 text-[10px] uppercase tracking-wide text-muted/70">
+                        external
+                      </span>
+                    )}
                   </p>
                 </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="font-semibold text-gray-900">
+                <div className="text-right shrink-0">
+                  <p className="font-semibold text-foreground">
                     {formatCurrency(loan.remainingAmount, loan.currency)}
                   </p>
                   {loan.currency !== baseCurrency && (
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-muted">
                       ≈{" "}
                       {formatCurrency(
                         convertAmount(loan.remainingAmount, loan.currency, baseCurrency, rates),
@@ -76,7 +96,7 @@ export function LoanList({ loans, memberMap, currentUid, baseCurrency, rates, to
                       )}
                     </p>
                   )}
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-xs text-muted mt-0.5">
                     of {formatCurrency(loan.principalAmount, loan.currency)}
                   </p>
                 </div>
