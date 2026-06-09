@@ -1,8 +1,9 @@
 "use client";
 
+import { onAuthStateChanged } from "firebase/auth";
 import { collection, limit, onSnapshot, orderBy, query, type Timestamp } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { getClientDb } from "@/firebase/client";
+import { getClientAuth, getClientDb } from "@/firebase/client";
 
 interface ActivityItem {
   id: string;
@@ -14,30 +15,58 @@ interface ActivityItem {
 export function ActivityFeed({ familyId }: { familyId: string }) {
   const [items, setItems] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    const q = query(
-      collection(getClientDb(), `families/${familyId}/activity`),
-      orderBy("createdAt", "desc"),
-      limit(20),
-    );
+    let unsubscribeSnapshot = () => {};
 
-    const unsubscribe = onSnapshot(q, (snap) => {
-      setItems(
-        snap.docs.map((doc) => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            type: data.type,
-            description: data.description,
-            createdAt: (data.createdAt as Timestamp | null)?.toDate() ?? new Date(),
-          };
-        }),
+    // Wait for Firebase Auth to restore the signed-in user before attaching the
+    // Firestore listener. Attaching too early (e.g. right after the post-login
+    // reload, before currentUser is rehydrated) triggers permission-denied.
+    const unsubscribeAuth = onAuthStateChanged(getClientAuth(), (user) => {
+      unsubscribeSnapshot();
+
+      if (!user) {
+        setError(true);
+        setLoading(false);
+        return;
+      }
+
+      const q = query(
+        collection(getClientDb(), `families/${familyId}/activity`),
+        orderBy("createdAt", "desc"),
+        limit(20),
       );
-      setLoading(false);
+
+      unsubscribeSnapshot = onSnapshot(
+        q,
+        (snap) => {
+          setItems(
+            snap.docs.map((doc) => {
+              const data = doc.data();
+              return {
+                id: doc.id,
+                type: data.type,
+                description: data.description,
+                createdAt: (data.createdAt as Timestamp | null)?.toDate() ?? new Date(),
+              };
+            }),
+          );
+          setError(false);
+          setLoading(false);
+        },
+        (err) => {
+          console.error("ActivityFeed snapshot error:", err);
+          setError(true);
+          setLoading(false);
+        },
+      );
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeSnapshot();
+      unsubscribeAuth();
+    };
   }, [familyId]);
 
   if (loading) {
@@ -56,7 +85,11 @@ export function ActivityFeed({ familyId }: { familyId: string }) {
         <span className="icon-chip">🕑</span>
         <h2 className="font-semibold text-foreground">Recent activity</h2>
       </div>
-      {items.length === 0 ? (
+      {error ? (
+        <p className="text-muted text-sm">
+          Couldn’t load recent activity. Check your connection and Firestore access.
+        </p>
+      ) : items.length === 0 ? (
         <p className="text-muted text-sm">No activity yet.</p>
       ) : (
         <div className="space-y-4">
