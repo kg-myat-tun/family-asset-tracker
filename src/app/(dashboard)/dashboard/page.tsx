@@ -24,7 +24,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6 max-w-5xl">
-      <section className="hero-gradient rounded-3xl p-7 md:p-8 text-white">
+      <section className="hero-panel rounded-3xl p-7 md:p-8 text-white">
         <p className="text-sm font-medium text-white/70">Total family net worth</p>
         <p className="text-4xl md:text-5xl font-bold mt-2 tracking-tight">
           {formatCurrency(data.totalNetWorth, family.baseCurrency)}
