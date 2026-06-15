@@ -2,6 +2,7 @@
 
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, limit, onSnapshot, orderBy, query, type Timestamp } from "firebase/firestore";
+import { Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getClientAuth, getClientDb } from "@/firebase/client";
 
@@ -82,7 +83,9 @@ export function ActivityFeed({ familyId }: { familyId: string }) {
   return (
     <div className="card p-6">
       <div className="flex items-center gap-3 mb-5">
-        <span className="icon-chip">🕑</span>
+        <span className="icon-chip">
+          <Clock className="w-5 h-5" aria-hidden="true" />
+        </span>
         <h2 className="font-semibold text-foreground">Recent activity</h2>
       </div>
       {error ? (

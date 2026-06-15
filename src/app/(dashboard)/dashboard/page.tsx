@@ -1,3 +1,5 @@
+import type { LucideIcon } from "lucide-react";
+import { BarChart3, Handshake, Users, Wallet } from "lucide-react";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
 import { LoanAlerts } from "@/components/dashboard/LoanAlerts";
 import { NetWorthChart } from "@/components/dashboard/NetWorthChart";
@@ -41,13 +43,13 @@ export default async function DashboardPage() {
       </section>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatTile icon="💰" label="Assets tracked" value={String(totalAssetCount)} />
+        <StatTile icon={Wallet} label="Assets tracked" value={String(totalAssetCount)} />
         <StatTile
-          icon="🤝"
+          icon={Handshake}
           label="Outstanding loans"
           value={formatCurrency(activeLoanTotal, family.baseCurrency)}
         />
-        <StatTile icon="👥" label="Family members" value={String(members.length)} />
+        <StatTile icon={Users} label="Family members" value={String(members.length)} />
       </div>
 
       {data.overdueLoans.length > 0 && <LoanAlerts loans={data.overdueLoans} members={members} />}
@@ -55,7 +57,9 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div className="card p-6">
           <div className="flex items-center gap-3 mb-5">
-            <span className="icon-chip">📊</span>
+            <span className="icon-chip">
+              <BarChart3 className="w-5 h-5" aria-hidden="true" />
+            </span>
             <h2 className="font-semibold text-foreground">Assets by member</h2>
           </div>
           <NetWorthChart
@@ -69,12 +73,14 @@ export default async function DashboardPage() {
 
         <div className="card p-6">
           <div className="flex items-center gap-3 mb-5">
-            <span className="icon-chip">🤝</span>
+            <span className="icon-chip">
+              <Handshake className="w-5 h-5" aria-hidden="true" />
+            </span>
             <h2 className="font-semibold text-foreground">Outstanding loans</h2>
           </div>
           <div className="space-y-3">
             {data.activeLoans.length === 0 ? (
-              <p className="text-muted text-sm">No outstanding loans 🎉</p>
+              <p className="text-muted text-sm">No outstanding loans.</p>
             ) : (
               data.activeLoans.slice(0, 5).map((loan) => {
                 return (
@@ -101,10 +107,20 @@ export default async function DashboardPage() {
   );
 }
 
-function StatTile({ icon, label, value }: { icon: string; label: string; value: string }) {
+function StatTile({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+}) {
   return (
     <div className="card p-4 flex items-center gap-3">
-      <span className="icon-chip">{icon}</span>
+      <span className="icon-chip">
+        <Icon className="w-5 h-5" aria-hidden="true" />
+      </span>
       <div className="min-w-0">
         <p className="text-xs text-muted">{label}</p>
         <p className="font-semibold text-foreground truncate">{value}</p>

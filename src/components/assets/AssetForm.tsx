@@ -46,7 +46,10 @@ export function AssetForm({ action, defaultValues, submitLabel = "Save asset" }:
       </div>
 
       <div>
-        <label htmlFor="asset-category" className="block text-sm font-medium text-foreground/80 mb-1">
+        <label
+          htmlFor="asset-category"
+          className="block text-sm font-medium text-foreground/80 mb-1"
+        >
           Category
         </label>
         <select
@@ -65,7 +68,10 @@ export function AssetForm({ action, defaultValues, submitLabel = "Save asset" }:
 
       <div className="flex gap-3">
         <div className="flex-1">
-          <label htmlFor="asset-amount" className="block text-sm font-medium text-foreground/80 mb-1">
+          <label
+            htmlFor="asset-amount"
+            className="block text-sm font-medium text-foreground/80 mb-1"
+          >
             Amount
           </label>
           <input
@@ -84,7 +90,10 @@ export function AssetForm({ action, defaultValues, submitLabel = "Save asset" }:
           )}
         </div>
         <div className="w-32">
-          <label htmlFor="asset-currency" className="block text-sm font-medium text-foreground/80 mb-1">
+          <label
+            htmlFor="asset-currency"
+            className="block text-sm font-medium text-foreground/80 mb-1"
+          >
             Currency
           </label>
           <select
@@ -103,7 +112,10 @@ export function AssetForm({ action, defaultValues, submitLabel = "Save asset" }:
       </div>
 
       <div>
-        <label htmlFor="asset-description" className="block text-sm font-medium text-foreground/80 mb-1">
+        <label
+          htmlFor="asset-description"
+          className="block text-sm font-medium text-foreground/80 mb-1"
+        >
           Description (optional)
         </label>
         <textarea

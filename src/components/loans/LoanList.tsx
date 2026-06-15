@@ -1,3 +1,4 @@
+import { ArrowDownLeft, ArrowUpRight, ChevronRight, Handshake, Lock } from "lucide-react";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { convertAmount, formatCurrency } from "@/lib/currency.server";
@@ -23,7 +24,7 @@ export function LoanList({ loans, memberMap, currentUid, baseCurrency, rates, to
   if (loans.length === 0) {
     return (
       <EmptyState
-        icon="🤝"
+        icon={Handshake}
         title="No loans yet"
         description="Track money lent between family members so nothing slips through the cracks."
         action={{ label: "+ New loan", href: "/loans/new" }}
@@ -37,9 +38,17 @@ export function LoanList({ loans, memberMap, currentUid, baseCurrency, rates, to
         const isLender = loan.lenderId === currentUid;
         const isBorrower = loan.borrowerId === currentUid;
         const relation = isLender
-          ? { verb: "You lent to", who: borrowerName(loan, memberMap), external: isExternalParty(loan.borrowerId) }
+          ? {
+              verb: "You lent to",
+              who: borrowerName(loan, memberMap),
+              external: isExternalParty(loan.borrowerId),
+            }
           : isBorrower
-            ? { verb: "You owe", who: lenderName(loan, memberMap), external: isExternalParty(loan.lenderId) }
+            ? {
+                verb: "You owe",
+                who: lenderName(loan, memberMap),
+                external: isExternalParty(loan.lenderId),
+              }
             : {
                 verb: `${lenderName(loan, memberMap)} →`,
                 who: borrowerName(loan, memberMap),
@@ -48,9 +57,11 @@ export function LoanList({ loans, memberMap, currentUid, baseCurrency, rates, to
         const isOverdue = loan.dueDate && loan.dueDate < today && loan.status !== "settled";
         const repaidPct =
           loan.principalAmount > 0
-            ? Math.round(((loan.principalAmount - loan.remainingAmount) / loan.principalAmount) * 100)
+            ? Math.round(
+                ((loan.principalAmount - loan.remainingAmount) / loan.principalAmount) * 100,
+              )
             : 0;
-        const icon = isLender ? "📤" : isBorrower ? "📥" : "🤝";
+        const Icon = isLender ? ArrowUpRight : isBorrower ? ArrowDownLeft : Handshake;
         const amountColor = isLender
           ? "text-emerald-600 dark:text-emerald-400"
           : isBorrower
@@ -60,7 +71,9 @@ export function LoanList({ loans, memberMap, currentUid, baseCurrency, rates, to
         return (
           <Link key={loan.id} href={`/loans/${loan.id}`} className="block">
             <div className="card card-hover p-4 flex items-center gap-4">
-              <span className="icon-chip text-xl shrink-0">{icon}</span>
+              <span className="icon-chip shrink-0">
+                <Icon className="w-5 h-5" aria-hidden="true" />
+              </span>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -76,12 +89,10 @@ export function LoanList({ loans, memberMap, currentUid, baseCurrency, rates, to
                     </span>
                   )}
                   {loan.visibility === "private" && (
-                    <span
-                      className="text-xs text-muted/70"
-                      title="Private — only visible to participants"
-                    >
-                      🔒
-                    </span>
+                    <Lock
+                      className="w-3.5 h-3.5 text-muted/70"
+                      aria-label="Private — only visible to participants"
+                    />
                   )}
                 </div>
                 <p className="text-sm text-muted mt-0.5 truncate">
@@ -100,7 +111,9 @@ export function LoanList({ loans, memberMap, currentUid, baseCurrency, rates, to
                       style={{ width: `${repaidPct}%` }}
                     />
                   </div>
-                  <span className="text-xs text-muted tabular-nums shrink-0">{repaidPct}% paid</span>
+                  <span className="text-xs text-muted tabular-nums shrink-0">
+                    {repaidPct}% paid
+                  </span>
                 </div>
               </div>
 
@@ -122,19 +135,7 @@ export function LoanList({ loans, memberMap, currentUid, baseCurrency, rates, to
                 </p>
               </div>
 
-              <svg
-                className="w-4 h-4 text-muted/60 shrink-0"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <title>Open</title>
-                <path d="m9 18 6-6-6-6" />
-              </svg>
+              <ChevronRight className="w-4 h-4 text-muted/60 shrink-0" aria-hidden="true" />
             </div>
           </Link>
         );

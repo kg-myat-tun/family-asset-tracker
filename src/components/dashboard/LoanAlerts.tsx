@@ -1,3 +1,4 @@
+import { TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/currency.server";
 import { borrowerName, lenderName } from "@/lib/loan-party";
@@ -9,7 +10,9 @@ export function LoanAlerts({ loans, members }: { loans: Loan[]; members: FamilyM
   return (
     <div className="bg-red-50 border border-red-200 rounded-2xl p-5 space-y-2.5 shadow-[0_18px_40px_-30px_rgba(220,38,38,0.5)]">
       <p className="text-sm font-semibold text-red-700 flex items-center gap-2">
-        <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-red-100">⚠️</span>
+        <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-red-100">
+          <TriangleAlert className="w-4 h-4 text-red-700" aria-hidden="true" />
+        </span>
         Overdue loans
       </p>
       {loans.map((loan) => (

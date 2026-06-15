@@ -18,8 +18,6 @@ export function canViewLoan(
   viewerUid: string,
 ): boolean {
   return (
-    loan.visibility === "shared" ||
-    loan.lenderId === viewerUid ||
-    loan.borrowerId === viewerUid
+    loan.visibility === "shared" || loan.lenderId === viewerUid || loan.borrowerId === viewerUid
   );
 }

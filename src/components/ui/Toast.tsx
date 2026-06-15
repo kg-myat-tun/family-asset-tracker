@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, X } from "lucide-react";
 import { useEffect } from "react";
 
 interface ToastProps {
@@ -20,7 +21,11 @@ export function Toast({ message, type, onDismiss }: ToastProps) {
         type === "success" ? "bg-green-600 text-white" : "bg-red-600 text-white"
       }`}
     >
-      <span>{type === "success" ? "✓" : "✗"}</span>
+      {type === "success" ? (
+        <Check className="w-4 h-4 shrink-0" aria-hidden="true" />
+      ) : (
+        <X className="w-4 h-4 shrink-0" aria-hidden="true" />
+      )}
       {message}
       <button
         type="button"
@@ -28,7 +33,7 @@ export function Toast({ message, type, onDismiss }: ToastProps) {
         className="ml-2 opacity-70 hover:opacity-100"
         aria-label="Dismiss"
       >
-        ×
+        <X className="w-4 h-4" aria-hidden="true" />
       </button>
     </div>
   );

@@ -41,10 +41,16 @@ export default async function LoansPage({
   const active = visibleLoans.filter((l) => l.status !== "settled");
   const owedToYou = active
     .filter((l) => l.lenderId === user.uid)
-    .reduce((sum, l) => sum + convertAmount(l.remainingAmount, l.currency, family.baseCurrency, rates), 0);
+    .reduce(
+      (sum, l) => sum + convertAmount(l.remainingAmount, l.currency, family.baseCurrency, rates),
+      0,
+    );
   const youOwe = active
     .filter((l) => l.borrowerId === user.uid)
-    .reduce((sum, l) => sum + convertAmount(l.remainingAmount, l.currency, family.baseCurrency, rates), 0);
+    .reduce(
+      (sum, l) => sum + convertAmount(l.remainingAmount, l.currency, family.baseCurrency, rates),
+      0,
+    );
   const net = owedToYou - youOwe;
   const count = visibleLoans.length;
 
@@ -64,7 +70,11 @@ export default async function LoansPage({
 
       {count > 0 && (
         <div className="card p-5 grid grid-cols-3 divide-x divide-line">
-          <Stat label="You're owed" value={formatCurrency(owedToYou, family.baseCurrency)} tone="pos" />
+          <Stat
+            label="You're owed"
+            value={formatCurrency(owedToYou, family.baseCurrency)}
+            tone="pos"
+          />
           <Stat label="You owe" value={formatCurrency(youOwe, family.baseCurrency)} tone="neg" />
           <Stat
             label="Net position"
@@ -80,7 +90,9 @@ export default async function LoansPage({
             key={t}
             href={`/loans?tab=${t}`}
             className={`px-4 py-1.5 rounded-md text-sm font-medium capitalize transition-colors ${
-              tab === t ? "bg-card shadow-sm text-foreground" : "text-muted hover:text-foreground/80"
+              tab === t
+                ? "bg-card shadow-sm text-foreground"
+                : "text-muted hover:text-foreground/80"
             }`}
           >
             {t === "lent" ? "I lent" : t === "owed" ? "I owe" : "All"}
