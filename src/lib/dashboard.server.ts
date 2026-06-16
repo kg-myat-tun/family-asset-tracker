@@ -3,7 +3,7 @@ import "server-only";
 import { getAdminDb } from "@/firebase/admin";
 import { convertAmount, getCachedRates } from "@/lib/currency.server";
 import { canViewAsset, canViewLoan } from "@/lib/visibility";
-import type { Asset, FamilyMember, Loan } from "@/types";
+import type { Asset, CompoundingPeriod, FamilyMember, Loan } from "@/types";
 
 export interface MemberSummary {
   member: FamilyMember;
@@ -61,6 +61,7 @@ export async function getDashboardData(
   const activeLoans: Loan[] = loansSnap.docs
     .map((doc) => {
       const d = doc.data();
+      const createdAt = d.createdAt.toDate();
       return {
         id: doc.id,
         lenderId: d.lenderId ?? null,
@@ -72,10 +73,15 @@ export async function getDashboardData(
         principalAmount: d.principalAmount,
         remainingAmount: d.remainingAmount,
         interestRate: d.interestRate ?? null,
+        compoundingPeriod: (d.compoundingPeriod ?? "none") as CompoundingPeriod,
+        interestStartDate: d.interestStartDate ? d.interestStartDate.toDate() : createdAt,
+        principalOutstanding: d.principalOutstanding ?? d.remainingAmount,
+        accruedInterestSnapshot: d.accruedInterestSnapshot ?? 0,
+        lastEventDate: d.lastEventDate ? d.lastEventDate.toDate() : createdAt,
         description: d.description,
         status: d.status,
         dueDate: d.dueDate ? d.dueDate.toDate() : null,
-        createdAt: d.createdAt.toDate(),
+        createdAt,
         updatedAt: d.updatedAt.toDate(),
       } satisfies Loan;
     })

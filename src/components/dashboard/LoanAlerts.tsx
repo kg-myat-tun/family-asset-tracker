@@ -1,6 +1,7 @@
 import { TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/currency.server";
+import { liveLoanState } from "@/lib/loan-interest";
 import { borrowerName, lenderName } from "@/lib/loan-party";
 import type { FamilyMember, Loan } from "@/types";
 
@@ -22,7 +23,7 @@ export function LoanAlerts({ loans, members }: { loans: Loan[]; members: FamilyM
           className="block text-sm text-red-600 hover:text-red-700 hover:underline"
         >
           {lenderName(loan, memberMap)} → {borrowerName(loan, memberMap)}:{" "}
-          {formatCurrency(loan.remainingAmount, loan.currency)} (due{" "}
+          {formatCurrency(liveLoanState(loan).totalOwed, loan.currency)} (due{" "}
           {loan.dueDate?.toLocaleDateString()})
         </Link>
       ))}

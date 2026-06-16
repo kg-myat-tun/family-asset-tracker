@@ -172,7 +172,7 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
             htmlFor="loan-interest"
             className="block text-sm font-medium text-foreground/80 mb-1"
           >
-            Interest rate % (optional)
+            Interest rate % / yr (optional)
           </label>
           <input
             id="loan-interest"
@@ -186,16 +186,35 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
           />
         </div>
         <div className="flex-1">
-          <label htmlFor="loan-due" className="block text-sm font-medium text-foreground/80 mb-1">
-            Due date (optional)
+          <label
+            htmlFor="loan-compounding"
+            className="block text-sm font-medium text-foreground/80 mb-1"
+          >
+            Compounds
           </label>
-          <input
-            id="loan-due"
-            name="dueDate"
-            type="date"
+          <select
+            id="loan-compounding"
+            name="compoundingPeriod"
+            defaultValue="monthly"
             className="w-full px-4 py-2 border border-line rounded-lg"
-          />
+          >
+            <option value="none">No interest</option>
+            <option value="monthly">Monthly</option>
+            <option value="annually">Annually</option>
+          </select>
         </div>
+      </div>
+
+      <div>
+        <label htmlFor="loan-due" className="block text-sm font-medium text-foreground/80 mb-1">
+          Due date (optional)
+        </label>
+        <input
+          id="loan-due"
+          name="dueDate"
+          type="date"
+          className="w-full px-4 py-2 border border-line rounded-lg"
+        />
       </div>
 
       <div>

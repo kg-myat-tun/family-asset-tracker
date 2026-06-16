@@ -30,6 +30,7 @@ const CreateLoanSchema = z
     currency: z.string().length(3),
     principalAmount: z.coerce.number().positive("Amount must be positive"),
     interestRate: z.coerce.number().min(0).max(100).optional(),
+    compoundingPeriod: z.enum(["none", "monthly", "annually"]).default("none"),
     description: z.string().min(1, "Description is required").max(300),
     dueDate: z
       .string()
@@ -101,6 +102,7 @@ export async function createLoanAction(
     currency: parsed.data.currency,
     principalAmount: parsed.data.principalAmount,
     interestRate: parsed.data.interestRate,
+    compoundingPeriod: parsed.data.compoundingPeriod,
     description: parsed.data.description,
     dueDate: parsed.data.dueDate,
   });

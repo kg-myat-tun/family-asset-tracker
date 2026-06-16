@@ -2,6 +2,7 @@ import { ArrowDownLeft, ArrowUpRight, ChevronRight, Handshake, Lock } from "luci
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { convertAmount, formatCurrency } from "@/lib/currency.server";
+import { liveLoanState } from "@/lib/loan-interest";
 import { borrowerName, isExternalParty, lenderName } from "@/lib/loan-party";
 import type { FamilyMember, Loan } from "@/types";
 
@@ -55,10 +56,11 @@ export function LoanList({ loans, memberMap, currentUid, baseCurrency, rates, to
                 external: isExternalParty(loan.lenderId) || isExternalParty(loan.borrowerId),
               };
         const isOverdue = loan.dueDate && loan.dueDate < today && loan.status !== "settled";
+        const { principalOutstanding, totalOwed } = liveLoanState(loan);
         const repaidPct =
           loan.principalAmount > 0
             ? Math.round(
-                ((loan.principalAmount - loan.remainingAmount) / loan.principalAmount) * 100,
+                ((loan.principalAmount - principalOutstanding) / loan.principalAmount) * 100,
               )
             : 0;
         const Icon = isLender ? ArrowUpRight : isBorrower ? ArrowDownLeft : Handshake;
@@ -119,13 +121,13 @@ export function LoanList({ loans, memberMap, currentUid, baseCurrency, rates, to
 
               <div className="text-right shrink-0">
                 <p className={`font-semibold tabular-nums ${amountColor}`}>
-                  {formatCurrency(loan.remainingAmount, loan.currency)}
+                  {formatCurrency(totalOwed, loan.currency)}
                 </p>
                 {loan.currency !== baseCurrency && (
                   <p className="text-xs text-muted tabular-nums">
                     ≈{" "}
                     {formatCurrency(
-                      convertAmount(loan.remainingAmount, loan.currency, baseCurrency, rates),
+                      convertAmount(totalOwed, loan.currency, baseCurrency, rates),
                       baseCurrency,
                     )}
                   </p>

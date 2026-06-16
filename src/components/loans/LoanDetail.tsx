@@ -1,5 +1,6 @@
 import { VisibilityBadge } from "@/components/ui/VisibilityBadge";
 import { convertAmount, formatCurrency } from "@/lib/currency.server";
+import { liveLoanState } from "@/lib/loan-interest";
 import { borrowerName, isExternalParty, lenderName } from "@/lib/loan-party";
 import type { FamilyMember, Loan, Repayment } from "@/types";
 import { RepaymentForm } from "./RepaymentForm";
@@ -16,7 +17,10 @@ interface Props {
 export function LoanDetail({ loan, repayments, memberMap, baseCurrency, rates, canAct }: Props) {
   const lender = lenderName(loan, memberMap);
   const borrower = borrowerName(loan, memberMap);
-  const progressPct = ((loan.principalAmount - loan.remainingAmount) / loan.principalAmount) * 100;
+  const { principalOutstanding, accruedInterest, totalOwed } = liveLoanState(loan);
+  const principalRepaid = loan.principalAmount - principalOutstanding;
+  const progressPct = (principalRepaid / loan.principalAmount) * 100;
+  const hasInterest = loan.compoundingPeriod !== "none" && (loan.interestRate ?? 0) > 0;
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -59,9 +63,9 @@ export function LoanDetail({ loan, repayments, memberMap, baseCurrency, rates, c
 
         <div>
           <div className="flex justify-between text-sm mb-1">
-            <span className="text-muted">Repaid</span>
+            <span className="text-muted">Principal repaid</span>
             <span className="font-medium">
-              {formatCurrency(loan.principalAmount - loan.remainingAmount, loan.currency)} of{" "}
+              {formatCurrency(principalRepaid, loan.currency)} of{" "}
               {formatCurrency(loan.principalAmount, loan.currency)}
             </span>
           </div>
@@ -71,23 +75,46 @@ export function LoanDetail({ loan, repayments, memberMap, baseCurrency, rates, c
               style={{ width: `${Math.min(progressPct, 100)}%` }}
             />
           </div>
-          <p className="text-sm text-muted mt-1">
-            Remaining:{" "}
-            <span className="font-semibold text-foreground">
-              {formatCurrency(loan.remainingAmount, loan.currency)}
-            </span>
-            {loan.currency !== baseCurrency && (
-              <span className="text-muted">
-                {" "}
-                ≈{" "}
-                {formatCurrency(
-                  convertAmount(loan.remainingAmount, loan.currency, baseCurrency, rates),
-                  baseCurrency,
-                )}
-              </span>
-            )}
-          </p>
         </div>
+
+        {hasInterest && (
+          <dl className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm border-t border-line pt-4">
+            <div className="flex justify-between col-span-2 sm:col-span-1">
+              <dt className="text-muted">Principal outstanding</dt>
+              <dd className="font-medium tabular-nums">
+                {formatCurrency(principalOutstanding, loan.currency)}
+              </dd>
+            </div>
+            <div className="flex justify-between col-span-2 sm:col-span-1">
+              <dt className="text-muted">
+                Accrued interest
+                <span className="ml-1 text-xs text-muted/70">
+                  ({loan.interestRate}% {loan.compoundingPeriod})
+                </span>
+              </dt>
+              <dd className="font-medium tabular-nums text-amber-600 dark:text-amber-400">
+                {formatCurrency(accruedInterest, loan.currency)}
+              </dd>
+            </div>
+          </dl>
+        )}
+
+        <p className="text-sm text-muted">
+          {hasInterest ? "Total owed" : "Remaining"}:{" "}
+          <span className="font-semibold text-foreground">
+            {formatCurrency(totalOwed, loan.currency)}
+          </span>
+          {loan.currency !== baseCurrency && (
+            <span className="text-muted">
+              {" "}
+              ≈{" "}
+              {formatCurrency(
+                convertAmount(totalOwed, loan.currency, baseCurrency, rates),
+                baseCurrency,
+              )}
+            </span>
+          )}
+        </p>
       </div>
 
       {canAct && loan.status !== "settled" && (
@@ -104,6 +131,12 @@ export function LoanDetail({ loan, repayments, memberMap, baseCurrency, rates, c
             >
               <div>
                 <p className="text-sm font-medium">{formatCurrency(r.amount, r.currency)}</p>
+                {r.interestPortion > 0.005 && (
+                  <p className="text-xs text-muted">
+                    {formatCurrency(r.principalPortion, loan.currency)} principal ·{" "}
+                    {formatCurrency(r.interestPortion, loan.currency)} interest
+                  </p>
+                )}
                 {r.note && <p className="text-xs text-muted">{r.note}</p>}
                 <p className="text-xs text-muted">{r.paidAt.toLocaleDateString()}</p>
               </div>
