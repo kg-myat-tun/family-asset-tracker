@@ -8,7 +8,13 @@ import { getClientAuth, getClientDb } from "@/firebase/client";
 
 interface ActivityItem {
   id: string;
-  type: "asset_added" | "asset_updated" | "loan_created" | "repayment_made";
+  type:
+    | "asset_added"
+    | "asset_updated"
+    | "loan_created"
+    | "loan_updated"
+    | "loan_deleted"
+    | "repayment_made";
   description: string;
   createdAt: Date;
 }

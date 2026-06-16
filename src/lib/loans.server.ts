@@ -119,6 +119,83 @@ export async function createLoan(
   return ref.id;
 }
 
+export async function updateLoan(
+  familyId: string,
+  loanId: string,
+  data: {
+    description: string;
+    visibility: Visibility;
+    dueDate: Date | null;
+    interestRate: number | null;
+    compoundingPeriod: CompoundingPeriod;
+    // Only honoured when the loan has no repayments yet (enforced by caller).
+    principalAmount?: number;
+    currency?: string;
+  },
+): Promise<void> {
+  const db = getAdminDb();
+  await db.runTransaction(async (tx) => {
+    const ref = db.doc(`families/${familyId}/loans/${loanId}`);
+    const snap = await tx.get(ref);
+    if (!snap.exists) throw new Error("Loan not found");
+    const loan = docToLoan(snap);
+
+    const update: Record<string, unknown> = {
+      description: data.description,
+      visibility: data.visibility,
+      dueDate: data.dueDate ?? null,
+      interestRate: data.interestRate,
+      compoundingPeriod: data.compoundingPeriod,
+      updatedAt: FieldValue.serverTimestamp(),
+    };
+
+    // If the interest terms change, freeze interest accrued under the old terms
+    // up to now so the new rate only applies going forward, not retroactively.
+    const termsChanged =
+      data.interestRate !== loan.interestRate ||
+      data.compoundingPeriod !== loan.compoundingPeriod;
+    if (termsChanged) {
+      const now = new Date();
+      const frozen =
+        loan.accruedInterestSnapshot +
+        accrue(
+          loan.principalOutstanding + loan.accruedInterestSnapshot,
+          loan.interestRate,
+          loan.compoundingPeriod,
+          loan.lastEventDate,
+          now,
+        );
+      update.accruedInterestSnapshot = frozen;
+      update.lastEventDate = now;
+      update.remainingAmount = loan.principalOutstanding + frozen;
+    }
+
+    // Principal/currency are only adjustable before any repayment exists. When
+    // the principal changes the loan resets to a fresh, untouched balance.
+    if (data.principalAmount !== undefined) {
+      update.principalAmount = data.principalAmount;
+      update.principalOutstanding = data.principalAmount;
+      update.accruedInterestSnapshot = 0;
+      update.lastEventDate = new Date();
+      update.remainingAmount = data.principalAmount;
+    }
+    if (data.currency !== undefined) update.currency = data.currency;
+
+    tx.update(ref, update);
+  });
+}
+
+export async function deleteLoan(familyId: string, loanId: string): Promise<void> {
+  const db = getAdminDb();
+  const loanRef = db.doc(`families/${familyId}/loans/${loanId}`);
+  const repayments = await loanRef.collection("repayments").get();
+
+  const batch = db.batch();
+  for (const doc of repayments.docs) batch.delete(doc.ref);
+  batch.delete(loanRef);
+  await batch.commit();
+}
+
 export async function recordRepayment(
   familyId: string,
   loanId: string,

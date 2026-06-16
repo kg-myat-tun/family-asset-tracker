@@ -3,7 +3,13 @@ import "server-only";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/firebase/admin";
 
-export type ActivityType = "asset_added" | "asset_updated" | "loan_created" | "repayment_made";
+export type ActivityType =
+  | "asset_added"
+  | "asset_updated"
+  | "loan_created"
+  | "loan_updated"
+  | "loan_deleted"
+  | "repayment_made";
 
 export async function logActivity(
   familyId: string,

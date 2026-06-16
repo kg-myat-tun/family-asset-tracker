@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { VisibilityBadge } from "@/components/ui/VisibilityBadge";
 import { convertAmount, formatCurrency } from "@/lib/currency.server";
 import { liveLoanState } from "@/lib/loan-interest";
 import { borrowerName, isExternalParty, lenderName } from "@/lib/loan-party";
 import type { FamilyMember, Loan, Repayment } from "@/types";
+import { DeleteLoanButton } from "./DeleteLoanButton";
 import { RepaymentForm } from "./RepaymentForm";
 
 interface Props {
@@ -12,9 +14,18 @@ interface Props {
   baseCurrency: string;
   rates: Record<string, number>;
   canAct: boolean;
+  canMutate: boolean;
 }
 
-export function LoanDetail({ loan, repayments, memberMap, baseCurrency, rates, canAct }: Props) {
+export function LoanDetail({
+  loan,
+  repayments,
+  memberMap,
+  baseCurrency,
+  rates,
+  canAct,
+  canMutate,
+}: Props) {
   const lender = lenderName(loan, memberMap);
   const borrower = borrowerName(loan, memberMap);
   const { principalOutstanding, accruedInterest, totalOwed } = liveLoanState(loan);
@@ -25,9 +36,22 @@ export function LoanDetail({ loan, repayments, memberMap, baseCurrency, rates, c
   return (
     <div className="max-w-2xl space-y-6">
       <div className="bg-card rounded-xl border border-line p-6 space-y-4">
-        <div className="flex items-center gap-3 flex-wrap">
-          <h1 className="text-xl font-semibold text-foreground">{loan.description}</h1>
-          <VisibilityBadge visibility={loan.visibility} />
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-xl font-semibold text-foreground">{loan.description}</h1>
+            <VisibilityBadge visibility={loan.visibility} />
+          </div>
+          {canMutate && (
+            <div className="flex items-center gap-3 shrink-0">
+              <Link
+                href={`/loans/${loan.id}/edit`}
+                className="text-sm text-accent hover:underline"
+              >
+                Edit
+              </Link>
+              <DeleteLoanButton loanId={loan.id} label={loan.description} />
+            </div>
+          )}
         </div>
 
         <div className="flex gap-8 text-sm flex-wrap">
