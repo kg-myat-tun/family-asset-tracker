@@ -9,6 +9,7 @@ import {
   markAllNotificationsReadAction,
   markNotificationReadAction,
 } from "@/actions/notification.actions";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { getClientAuth, getClientDb } from "@/firebase/client";
 
 interface Item {
@@ -22,6 +23,7 @@ interface Item {
 }
 
 export function NotificationBell({ familyId }: { familyId: string }) {
+  const { dict } = useI18n();
   const [items, setItems] = useState<Item[]>([]);
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -90,7 +92,7 @@ export function NotificationBell({ familyId }: { familyId: string }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label={unread > 0 ? `Notifications (${unread} unread)` : "Notifications"}
+        aria-label={dict.header.notifications}
         className="relative p-2 -m-1 text-muted hover:text-foreground"
       >
         <Bell className="w-5 h-5" aria-hidden="true" />
@@ -104,20 +106,24 @@ export function NotificationBell({ familyId }: { familyId: string }) {
       {open && (
         <div className="absolute right-0 mt-2 w-80 max-w-[90vw] bg-card border border-line rounded-xl shadow-lg z-40 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-2.5 border-b border-line">
-            <span className="text-sm font-semibold text-foreground">Notifications</span>
+            <span className="text-sm font-semibold text-foreground">
+              {dict.header.notifications}
+            </span>
             {unread > 0 && (
               <button
                 type="button"
                 onClick={() => markAllNotificationsReadAction()}
                 className="text-xs text-accent hover:underline"
               >
-                Mark all read
+                {dict.notifications.markAllRead}
               </button>
             )}
           </div>
 
           {items.length === 0 ? (
-            <p className="px-4 py-6 text-sm text-muted text-center">You're all caught up.</p>
+            <p className="px-4 py-6 text-sm text-muted text-center">
+              {dict.notifications.allCaughtUp}
+            </p>
           ) : (
             <ul className="max-h-96 overflow-y-auto divide-y divide-line">
               {items.map((item) => (

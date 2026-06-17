@@ -2,9 +2,10 @@ import { ArrowDownLeft, ArrowUpRight, ChevronRight, Handshake, Lock } from "luci
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { convertAmount, formatCurrency } from "@/lib/currency.server";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { liveLoanState } from "@/lib/loan-interest";
 import { borrowerName, isExternalParty, lenderName } from "@/lib/loan-party";
-import type { FamilyMember, Loan } from "@/types";
+import type { FamilyMember, Loan, LoanStatus } from "@/types";
 
 interface Props {
   loans: Loan[];
@@ -13,6 +14,7 @@ interface Props {
   baseCurrency: string;
   rates: Record<string, number>;
   today: Date;
+  dict: Dictionary;
 }
 
 const STATUS_STYLES = {
@@ -21,14 +23,20 @@ const STATUS_STYLES = {
   settled: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
 };
 
-export function LoanList({ loans, memberMap, currentUid, baseCurrency, rates, today }: Props) {
+export function LoanList({ loans, memberMap, currentUid, baseCurrency, rates, today, dict }: Props) {
+  const statusLabels: Record<LoanStatus, string> = {
+    active: dict.loans.statusActive,
+    partially_paid: dict.loans.statusPartiallyPaid,
+    settled: dict.loans.statusSettled,
+  };
+
   if (loans.length === 0) {
     return (
       <EmptyState
         icon={Handshake}
-        title="No loans yet"
-        description="Track money lent between family members so nothing slips through the cracks."
-        action={{ label: "+ New loan", href: "/loans/new" }}
+        title={dict.loans.noLoansTitle}
+        description={dict.loans.noLoansDesc}
+        action={{ label: dict.loans.newLoan, href: "/loans/new" }}
       />
     );
   }
@@ -40,13 +48,13 @@ export function LoanList({ loans, memberMap, currentUid, baseCurrency, rates, to
         const isBorrower = loan.borrowerId === currentUid;
         const relation = isLender
           ? {
-              verb: "You lent to",
+              verb: dict.loans.relLentTo,
               who: borrowerName(loan, memberMap),
               external: isExternalParty(loan.borrowerId),
             }
           : isBorrower
             ? {
-                verb: "You owe",
+                verb: dict.loans.relYouOwe,
                 who: lenderName(loan, memberMap),
                 external: isExternalParty(loan.lenderId),
               }
@@ -83,11 +91,11 @@ export function LoanList({ loans, memberMap, currentUid, baseCurrency, rates, to
                   <span
                     className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_STYLES[loan.status]}`}
                   >
-                    {loan.status.replace("_", " ")}
+                    {statusLabels[loan.status]}
                   </span>
                   {isOverdue && (
                     <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/15 text-red-600 dark:text-red-400 font-medium">
-                      overdue
+                      {dict.loans.overdue}
                     </span>
                   )}
                   {loan.visibility === "private" && (
@@ -102,7 +110,7 @@ export function LoanList({ loans, memberMap, currentUid, baseCurrency, rates, to
                   <span className="font-medium text-foreground/80">{relation.who}</span>
                   {relation.external && (
                     <span className="ml-1.5 text-[10px] uppercase tracking-wide text-muted/70">
-                      external
+                      {dict.common.external}
                     </span>
                   )}
                 </p>
@@ -114,7 +122,8 @@ export function LoanList({ loans, memberMap, currentUid, baseCurrency, rates, to
                     />
                   </div>
                   <span className="text-xs text-muted tabular-nums shrink-0">
-                    {repaidPct}% paid
+                    {repaidPct}
+                    {dict.loans.paidSuffix}
                   </span>
                 </div>
               </div>
@@ -133,7 +142,7 @@ export function LoanList({ loans, memberMap, currentUid, baseCurrency, rates, to
                   </p>
                 )}
                 <p className="text-xs text-muted mt-0.5 tabular-nums">
-                  of {formatCurrency(loan.principalAmount, loan.currency)}
+                  {dict.common.of} {formatCurrency(loan.principalAmount, loan.currency)}
                 </p>
               </div>
 

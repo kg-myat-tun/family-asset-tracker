@@ -2,8 +2,9 @@ import Link from "next/link";
 import { VisibilityBadge } from "@/components/ui/VisibilityBadge";
 import { convertAmount, formatCurrency } from "@/lib/currency.server";
 import { buildSchedule, hasSchedule, liveLoanState, nextInstallment } from "@/lib/loan-interest";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { borrowerName, isExternalParty, lenderName } from "@/lib/loan-party";
-import type { FamilyMember, Loan, Repayment } from "@/types";
+import type { CompoundingPeriod, FamilyMember, Loan, Repayment } from "@/types";
 import { DeleteLoanButton } from "./DeleteLoanButton";
 import { RepaymentForm } from "./RepaymentForm";
 
@@ -15,6 +16,7 @@ interface Props {
   rates: Record<string, number>;
   canAct: boolean;
   canMutate: boolean;
+  dict: Dictionary;
 }
 
 export function LoanDetail({
@@ -25,6 +27,7 @@ export function LoanDetail({
   rates,
   canAct,
   canMutate,
+  dict,
 }: Props) {
   const lender = lenderName(loan, memberMap);
   const borrower = borrowerName(loan, memberMap);
@@ -34,6 +37,11 @@ export function LoanDetail({
   const hasInterest = loan.compoundingPeriod !== "none" && (loan.interestRate ?? 0) > 0;
   const schedule = hasSchedule(loan) ? buildSchedule(loan) : [];
   const next = nextInstallment(loan);
+  const compoundingLabels: Record<CompoundingPeriod, string> = {
+    none: dict.loans.compNone,
+    monthly: dict.loans.compMonthly,
+    annually: dict.loans.compAnnually,
+  };
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -49,7 +57,7 @@ export function LoanDetail({
                 href={`/loans/${loan.id}/edit`}
                 className="text-sm text-accent hover:underline"
               >
-                Edit
+                {dict.assets.edit}
               </Link>
               <DeleteLoanButton loanId={loan.id} label={loan.description} />
             </div>
@@ -58,30 +66,30 @@ export function LoanDetail({
 
         <div className="flex gap-8 text-sm flex-wrap">
           <div>
-            <p className="text-muted">Lender</p>
+            <p className="text-muted">{dict.loans.lender}</p>
             <p className="font-medium">
               {lender}
               {isExternalParty(loan.lenderId) && (
                 <span className="ml-1.5 text-[10px] uppercase tracking-wide text-muted/70">
-                  external
+                  {dict.common.external}
                 </span>
               )}
             </p>
           </div>
           <div>
-            <p className="text-muted">Borrower</p>
+            <p className="text-muted">{dict.loans.borrower}</p>
             <p className="font-medium">
               {borrower}
               {isExternalParty(loan.borrowerId) && (
                 <span className="ml-1.5 text-[10px] uppercase tracking-wide text-muted/70">
-                  external
+                  {dict.common.external}
                 </span>
               )}
             </p>
           </div>
           {loan.dueDate && (
             <div>
-              <p className="text-muted">Due date</p>
+              <p className="text-muted">{dict.loans.dueDate}</p>
               <p className="font-medium">{loan.dueDate.toLocaleDateString()}</p>
             </div>
           )}
@@ -89,9 +97,9 @@ export function LoanDetail({
 
         <div>
           <div className="flex justify-between text-sm mb-1">
-            <span className="text-muted">Principal repaid</span>
+            <span className="text-muted">{dict.loans.principalRepaid}</span>
             <span className="font-medium">
-              {formatCurrency(principalRepaid, loan.currency)} of{" "}
+              {formatCurrency(principalRepaid, loan.currency)} {dict.common.of}{" "}
               {formatCurrency(loan.principalAmount, loan.currency)}
             </span>
           </div>
@@ -106,16 +114,16 @@ export function LoanDetail({
         {hasInterest && (
           <dl className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm border-t border-line pt-4">
             <div className="flex justify-between col-span-2 sm:col-span-1">
-              <dt className="text-muted">Principal outstanding</dt>
+              <dt className="text-muted">{dict.loans.principalOutstanding}</dt>
               <dd className="font-medium tabular-nums">
                 {formatCurrency(principalOutstanding, loan.currency)}
               </dd>
             </div>
             <div className="flex justify-between col-span-2 sm:col-span-1">
               <dt className="text-muted">
-                Accrued interest
+                {dict.loans.accruedInterest}
                 <span className="ml-1 text-xs text-muted/70">
-                  ({loan.interestRate}% {loan.compoundingPeriod})
+                  ({loan.interestRate}% {compoundingLabels[loan.compoundingPeriod]})
                 </span>
               </dt>
               <dd className="font-medium tabular-nums text-amber-600 dark:text-amber-400">
@@ -126,7 +134,7 @@ export function LoanDetail({
         )}
 
         <p className="text-sm text-muted">
-          {hasInterest ? "Total owed" : "Remaining"}:{" "}
+          {hasInterest ? dict.loans.totalOwed : dict.loans.remaining}:{" "}
           <span className="font-semibold text-foreground">
             {formatCurrency(totalOwed, loan.currency)}
           </span>
@@ -148,11 +156,12 @@ export function LoanDetail({
               next.status === "overdue" ? "text-red-600 dark:text-red-400" : "text-muted"
             }`}
           >
-            {next.status === "overdue" ? "Installment overdue" : "Next payment"}:{" "}
+            {next.status === "overdue" ? dict.loans.installmentOverdue : dict.loans.nextPayment}:{" "}
             <span className="font-semibold text-foreground">
               {formatCurrency(next.payment, loan.currency)}
             </span>{" "}
-            due {next.dueDate.toLocaleDateString()} (#{next.number} of {loan.installmentCount})
+            {next.dueDate.toLocaleDateString()} · #{next.number} {dict.common.of}{" "}
+            {loan.installmentCount}
           </p>
         )}
       </div>
@@ -164,18 +173,19 @@ export function LoanDetail({
       {schedule.length > 0 && (
         <details className="bg-card rounded-xl border border-line p-4">
           <summary className="text-sm font-medium text-foreground cursor-pointer">
-            Repayment schedule ({loan.installmentCount} monthly installments)
+            {dict.loans.repaymentSchedule} ({loan.installmentCount}{" "}
+            {dict.loans.scheduleInstallments})
           </summary>
           <div className="mt-3 overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-muted border-b border-line">
-                  <th className="py-1.5 pr-3 font-medium">#</th>
-                  <th className="py-1.5 pr-3 font-medium">Due</th>
-                  <th className="py-1.5 pr-3 font-medium text-right">Payment</th>
-                  <th className="py-1.5 pr-3 font-medium text-right">Principal</th>
-                  <th className="py-1.5 pr-3 font-medium text-right">Interest</th>
-                  <th className="py-1.5 font-medium text-right">Balance</th>
+                  <th className="py-1.5 pr-3 font-medium">{dict.loans.colNum}</th>
+                  <th className="py-1.5 pr-3 font-medium">{dict.loans.colDue}</th>
+                  <th className="py-1.5 pr-3 font-medium text-right">{dict.loans.colPayment}</th>
+                  <th className="py-1.5 pr-3 font-medium text-right">{dict.loans.colPrincipal}</th>
+                  <th className="py-1.5 pr-3 font-medium text-right">{dict.loans.colInterest}</th>
+                  <th className="py-1.5 font-medium text-right">{dict.loans.colBalance}</th>
                 </tr>
               </thead>
               <tbody>
@@ -214,7 +224,7 @@ export function LoanDetail({
 
       {repayments.length > 0 && (
         <div className="space-y-2">
-          <h2 className="font-medium text-foreground">Repayment history</h2>
+          <h2 className="font-medium text-foreground">{dict.loans.repaymentHistory}</h2>
           {repayments.map((r) => (
             <div
               key={r.id}
@@ -224,8 +234,8 @@ export function LoanDetail({
                 <p className="text-sm font-medium">{formatCurrency(r.amount, r.currency)}</p>
                 {r.interestPortion > 0.005 && (
                   <p className="text-xs text-muted">
-                    {formatCurrency(r.principalPortion, loan.currency)} principal ·{" "}
-                    {formatCurrency(r.interestPortion, loan.currency)} interest
+                    {formatCurrency(r.principalPortion, loan.currency)} {dict.loans.principal} ·{" "}
+                    {formatCurrency(r.interestPortion, loan.currency)} {dict.loans.interest}
                   </p>
                 )}
                 {r.note && <p className="text-xs text-muted">{r.note}</p>}

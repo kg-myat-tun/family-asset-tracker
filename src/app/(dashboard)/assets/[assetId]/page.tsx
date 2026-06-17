@@ -6,6 +6,7 @@ import { getAsset } from "@/lib/assets.server";
 import { requireUser } from "@/lib/auth.server";
 import { convertAmount, formatCurrency, getCachedRates } from "@/lib/currency.server";
 import { getFamilyForUser, getFamilyMembers } from "@/lib/family.server";
+import { getServerI18n } from "@/lib/i18n/server";
 import { canViewAsset } from "@/lib/visibility";
 
 export default async function AssetDetailPage({
@@ -21,9 +22,10 @@ export default async function AssetDetailPage({
   const asset = await getAsset(family.id, assetId);
   if (!asset || !canViewAsset(asset, user.uid)) notFound();
 
-  const [rates, members] = await Promise.all([
+  const [rates, members, { dict }] = await Promise.all([
     getCachedRates(family.id),
     getFamilyMembers(family.id),
+    getServerI18n(),
   ]);
 
   const owner = members.find((m) => m.uid === asset.ownerId);
@@ -41,7 +43,7 @@ export default async function AssetDetailPage({
         {canMutate && (
           <div className="flex items-center gap-3">
             <Link href={`/assets/${asset.id}/edit`} className="text-sm text-accent hover:underline">
-              Edit
+              {dict.assets.edit}
             </Link>
             <DeleteAssetButton assetId={asset.id} label={asset.name} />
           </div>
@@ -49,10 +51,10 @@ export default async function AssetDetailPage({
       </div>
 
       <dl className="bg-card rounded-xl border border-line divide-y divide-line">
-        <Row label="Category">
-          <span className="capitalize">{asset.category}</span>
+        <Row label={dict.assets.category}>
+          <span>{dict.assets.categories[asset.category]}</span>
         </Row>
-        <Row label="Amount">
+        <Row label={dict.assets.amount}>
           <div>
             <p className="font-semibold">{formatCurrency(asset.amount, asset.currency)}</p>
             {asset.currency !== family.baseCurrency && (
@@ -62,8 +64,8 @@ export default async function AssetDetailPage({
             )}
           </div>
         </Row>
-        <Row label="Owner">{owner?.displayName ?? "Unknown"}</Row>
-        {asset.description && <Row label="Description">{asset.description}</Row>}
+        <Row label={dict.assets.owner}>{owner?.displayName ?? dict.assets.unknownOwner}</Row>
+        {asset.description && <Row label={dict.assets.description}>{asset.description}</Row>}
       </dl>
     </div>
   );

@@ -13,7 +13,8 @@ import {
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { convertAmount, formatCurrency } from "@/lib/currency.server";
-import type { Asset } from "@/types";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import type { Asset, AssetCategory } from "@/types";
 
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
   cash: Banknote,
@@ -28,16 +29,17 @@ interface Props {
   assets: Asset[];
   baseCurrency: string;
   rates: Record<string, number>;
+  dict: Dictionary;
 }
 
-export function AssetList({ assets, baseCurrency, rates }: Props) {
+export function AssetList({ assets, baseCurrency, rates, dict }: Props) {
   if (assets.length === 0) {
     return (
       <EmptyState
         icon={Wallet}
-        title="No assets yet"
-        description="Start tracking your family's wealth by adding your first asset."
-        action={{ label: "+ Add asset", href: "/assets/new" }}
+        title={dict.assets.noAssetsTitle}
+        description={dict.assets.noAssetsDesc}
+        action={{ label: dict.assets.addAsset, href: "/assets/new" }}
       />
     );
   }
@@ -63,13 +65,13 @@ export function AssetList({ assets, baseCurrency, rates }: Props) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="font-semibold text-foreground truncate">{asset.name}</p>
-                  <span className="hidden sm:inline shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full bg-accent-soft text-accent-strong capitalize">
-                    {asset.category}
+                  <span className="hidden sm:inline shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full bg-accent-soft text-accent-strong">
+                    {dict.assets.categories[asset.category as AssetCategory]}
                   </span>
                   {asset.visibility === "private" && (
                     <Lock
                       className="shrink-0 w-3.5 h-3.5 text-muted/70"
-                      aria-label="Private — only visible to you"
+                      aria-label={dict.assets.privateLock}
                     />
                   )}
                 </div>

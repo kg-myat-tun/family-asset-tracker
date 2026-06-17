@@ -2,8 +2,9 @@
 
 import { useActionState } from "react";
 import type { AssetFormState } from "@/actions/asset.actions";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { VisibilityField } from "@/components/ui/VisibilityField";
-import type { Asset } from "@/types";
+import type { Asset, AssetCategory } from "@/types";
 
 const CATEGORIES = ["cash", "bank", "investment", "property", "crypto", "other"] as const;
 const COMMON_CURRENCIES = [
@@ -26,14 +27,15 @@ interface Props {
   submitLabel?: string;
 }
 
-export function AssetForm({ action, defaultValues, submitLabel = "Save asset" }: Props) {
+export function AssetForm({ action, defaultValues, submitLabel }: Props) {
+  const { dict } = useI18n();
   const [state, formAction, pending] = useActionState<AssetFormState, FormData>(action, null);
 
   return (
     <form action={formAction} className="space-y-5">
       <div>
         <label htmlFor="asset-name" className="block text-sm font-medium text-foreground/80 mb-1">
-          Name
+          {dict.assets.name}
         </label>
         <input
           id="asset-name"
@@ -50,7 +52,7 @@ export function AssetForm({ action, defaultValues, submitLabel = "Save asset" }:
           htmlFor="asset-category"
           className="block text-sm font-medium text-foreground/80 mb-1"
         >
-          Category
+          {dict.assets.category}
         </label>
         <select
           id="asset-category"
@@ -60,7 +62,7 @@ export function AssetForm({ action, defaultValues, submitLabel = "Save asset" }:
         >
           {CATEGORIES.map((c) => (
             <option key={c} value={c}>
-              {c.charAt(0).toUpperCase() + c.slice(1)}
+              {dict.assets.categories[c as AssetCategory]}
             </option>
           ))}
         </select>
@@ -72,7 +74,7 @@ export function AssetForm({ action, defaultValues, submitLabel = "Save asset" }:
             htmlFor="asset-amount"
             className="block text-sm font-medium text-foreground/80 mb-1"
           >
-            Amount
+            {dict.assets.amount}
           </label>
           <input
             id="asset-amount"
@@ -94,7 +96,7 @@ export function AssetForm({ action, defaultValues, submitLabel = "Save asset" }:
             htmlFor="asset-currency"
             className="block text-sm font-medium text-foreground/80 mb-1"
           >
-            Currency
+            {dict.assets.currency}
           </label>
           <select
             id="asset-currency"
@@ -116,7 +118,7 @@ export function AssetForm({ action, defaultValues, submitLabel = "Save asset" }:
           htmlFor="asset-description"
           className="block text-sm font-medium text-foreground/80 mb-1"
         >
-          Description (optional)
+          {dict.assets.descriptionOptional}
         </label>
         <textarea
           id="asset-description"
@@ -136,7 +138,7 @@ export function AssetForm({ action, defaultValues, submitLabel = "Save asset" }:
         disabled={pending}
         className="w-full py-2 px-4 bg-accent text-white rounded-lg hover:bg-accent-strong disabled:opacity-50"
       >
-        {pending ? "Saving..." : submitLabel}
+        {pending ? dict.common.saving : (submitLabel ?? dict.assets.createAsset)}
       </button>
     </form>
   );

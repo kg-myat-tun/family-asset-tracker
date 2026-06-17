@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { loginWithEmail, loginWithGoogle } from "@/lib/auth.client";
 
 export function LoginForm() {
+  const { dict } = useI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -17,7 +19,7 @@ export function LoginForm() {
     try {
       await loginWithEmail(email, password);
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Login failed.");
+      setError(caughtError instanceof Error ? caughtError.message : dict.auth.loginFailed);
     } finally {
       setLoading(false);
     }
@@ -30,7 +32,7 @@ export function LoginForm() {
     try {
       await loginWithGoogle();
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Google login failed.");
+      setError(caughtError instanceof Error ? caughtError.message : dict.auth.googleLoginFailed);
     } finally {
       setLoading(false);
     }
@@ -40,12 +42,12 @@ export function LoginForm() {
     <div className="space-y-5">
       <form onSubmit={handleEmailLogin} className="space-y-4">
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-foreground">Email</span>
+          <span className="text-sm font-medium text-foreground">{dict.auth.email}</span>
           <input
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            placeholder="you@example.com"
+            placeholder={dict.auth.emailPlaceholder}
             autoComplete="email"
             required
             className="w-full rounded-2xl border border-line bg-card px-4 py-3 text-sm text-foreground outline-none transition focus:border-accent focus:ring-4 focus:ring-accent-soft"
@@ -53,12 +55,12 @@ export function LoginForm() {
         </label>
 
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-foreground">Password</span>
+          <span className="text-sm font-medium text-foreground">{dict.auth.password}</span>
           <input
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            placeholder="Your password"
+            placeholder={dict.auth.passwordPlaceholder}
             autoComplete="current-password"
             required
             className="w-full rounded-2xl border border-line bg-card px-4 py-3 text-sm text-foreground outline-none transition focus:border-accent focus:ring-4 focus:ring-accent-soft"
@@ -76,7 +78,7 @@ export function LoginForm() {
           disabled={loading}
           className="w-full rounded-full bg-accent px-5 py-3 text-sm font-semibold text-white transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {loading ? "Signing in..." : "Sign in"}
+          {loading ? dict.auth.signingIn : dict.auth.signIn}
         </button>
       </form>
 
@@ -85,7 +87,7 @@ export function LoginForm() {
           <div className="w-full border-t border-line" />
         </div>
         <div className="relative flex justify-center">
-          <span className="bg-card px-3 text-sm text-muted">or</span>
+          <span className="bg-card px-3 text-sm text-muted">{dict.auth.or}</span>
         </div>
       </div>
 
@@ -95,7 +97,7 @@ export function LoginForm() {
         disabled={loading}
         className="flex w-full items-center justify-center gap-3 rounded-full border border-line bg-card px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-accent-soft disabled:cursor-not-allowed disabled:opacity-60"
       >
-        Continue with Google
+        {dict.auth.continueWithGoogle}
       </button>
     </div>
   );

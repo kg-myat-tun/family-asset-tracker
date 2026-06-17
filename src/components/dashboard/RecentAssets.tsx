@@ -1,9 +1,10 @@
 import { ArrowRight, Wallet } from "lucide-react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/currency.server";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Asset } from "@/types";
 
-export function RecentAssets({ assets }: { assets: Asset[] }) {
+export function RecentAssets({ assets, dict }: { assets: Asset[]; dict: Dictionary }) {
   return (
     <div className="card p-6">
       <div className="flex items-center justify-between mb-5">
@@ -11,17 +12,17 @@ export function RecentAssets({ assets }: { assets: Asset[] }) {
           <span className="icon-chip">
             <Wallet className="w-5 h-5" aria-hidden="true" />
           </span>
-          <h2 className="font-semibold text-foreground">Recent assets</h2>
+          <h2 className="font-semibold text-foreground">{dict.dashboard.recentAssets}</h2>
         </div>
         <Link
           href="/assets"
           className="text-sm font-medium text-accent hover:text-accent-strong inline-flex items-center gap-1"
         >
-          View all <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+          {dict.dashboard.viewAll} <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
         </Link>
       </div>
       {assets.length === 0 ? (
-        <p className="text-muted text-sm">No assets yet.</p>
+        <p className="text-muted text-sm">{dict.dashboard.noAssets}</p>
       ) : (
         <div className="space-y-1">
           {assets.map((a) => (

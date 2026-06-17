@@ -3,6 +3,7 @@ import { updateLoanAction } from "@/actions/loan.actions";
 import { LoanEditForm } from "@/components/loans/LoanEditForm";
 import { requireUser } from "@/lib/auth.server";
 import { getFamilyForUser, getFamilyMembers } from "@/lib/family.server";
+import { getServerI18n } from "@/lib/i18n/server";
 import { getLoan, getRepayments } from "@/lib/loans.server";
 import { canViewLoan } from "@/lib/visibility";
 
@@ -27,10 +28,11 @@ export default async function EditLoanPage({ params }: { params: Promise<{ loanI
 
   const memberMap = Object.fromEntries(members.map((m) => [m.uid, m]));
   const boundAction = updateLoanAction.bind(null, loan.id);
+  const { dict } = await getServerI18n();
 
   return (
     <div className="max-w-xl mx-auto">
-      <h1 className="text-2xl font-semibold text-foreground mb-6">Edit loan</h1>
+      <h1 className="text-2xl font-semibold text-foreground mb-6">{dict.loans.editTitle}</h1>
       <LoanEditForm
         action={boundAction}
         loan={loan}

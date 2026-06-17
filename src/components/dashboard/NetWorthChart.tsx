@@ -1,6 +1,7 @@
 "use client";
 
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { useI18n } from "@/components/i18n/I18nProvider";
 
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
 
@@ -10,8 +11,10 @@ interface Props {
 }
 
 export function NetWorthChart({ data, currency }: Props) {
+  const { dict } = useI18n();
+
   if (data.length === 0 || data.every((d) => d.value === 0)) {
-    return <p className="text-muted text-sm">No asset data yet.</p>;
+    return <p className="text-muted text-sm">{dict.dashboard.noAssetData}</p>;
   }
 
   return (

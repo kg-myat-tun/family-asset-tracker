@@ -2,21 +2,23 @@
 
 import { useActionState } from "react";
 import { type LoanFormState, recordRepaymentAction } from "@/actions/loan.actions";
+import { useI18n } from "@/components/i18n/I18nProvider";
 
 const COMMON_CURRENCIES = ["USD", "EUR", "GBP", "THB", "JPY", "SGD", "AUD", "CAD"];
 
 export function RepaymentForm({ loanId, loanCurrency }: { loanId: string; loanCurrency: string }) {
+  const { dict } = useI18n();
   const action = recordRepaymentAction.bind(null, loanId);
   const [state, formAction, pending] = useActionState<LoanFormState, FormData>(action, null);
 
   return (
     <form action={formAction} className="space-y-4 bg-background rounded-xl p-4">
-      <h3 className="font-medium text-foreground">Record repayment</h3>
+      <h3 className="font-medium text-foreground">{dict.loans.recordRepayment}</h3>
 
       <div className="flex gap-3">
         <div className="flex-1">
           <label htmlFor="repay-amount" className="block text-sm text-muted mb-1">
-            Amount paid
+            {dict.loans.amountPaid}
           </label>
           <input
             id="repay-amount"
@@ -34,7 +36,7 @@ export function RepaymentForm({ loanId, loanCurrency }: { loanId: string; loanCu
         </div>
         <div className="w-28">
           <label htmlFor="repay-currency" className="block text-sm text-muted mb-1">
-            Currency
+            {dict.loans.currency}
           </label>
           <select
             id="repay-currency"
@@ -53,12 +55,12 @@ export function RepaymentForm({ loanId, loanCurrency }: { loanId: string; loanCu
 
       <div>
         <label htmlFor="repay-note" className="block text-sm text-muted mb-1">
-          Note (optional)
+          {dict.loans.noteOptional}
         </label>
         <input
           id="repay-note"
           name="note"
-          placeholder="e.g. Cash payment"
+          placeholder={dict.loans.notePlaceholder}
           className="w-full px-3 py-2 border border-line rounded-lg text-sm"
         />
       </div>
@@ -70,7 +72,7 @@ export function RepaymentForm({ loanId, loanCurrency }: { loanId: string; loanCu
         disabled={pending}
         className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 disabled:opacity-50"
       >
-        {pending ? "Recording..." : "Record payment"}
+        {pending ? dict.loans.recording : dict.loans.recordPayment}
       </button>
     </form>
   );

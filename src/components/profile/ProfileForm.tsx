@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { type ProfileFormState, updateProfileAction } from "@/actions/profile.actions";
+import { useI18n } from "@/components/i18n/I18nProvider";
 
 interface Props {
   defaultDisplayName: string;
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function ProfileForm({ defaultDisplayName, email }: Props) {
+  const { dict } = useI18n();
   const [state, formAction, pending] = useActionState<ProfileFormState, FormData>(
     updateProfileAction,
     null,
@@ -18,7 +20,7 @@ export function ProfileForm({ defaultDisplayName, email }: Props) {
     <form action={formAction} className="space-y-5">
       <div>
         <label htmlFor="profile-name" className="block text-sm font-medium text-foreground/80 mb-1">
-          Display name
+          {dict.profile.displayName}
         </label>
         <input
           id="profile-name"
@@ -31,9 +33,7 @@ export function ProfileForm({ defaultDisplayName, email }: Props) {
         {state && "errors" in state && state.errors?.displayName && (
           <p className="text-sm text-red-500 mt-1">{state.errors.displayName[0]}</p>
         )}
-        <p className="text-xs text-muted mt-1">
-          Shown to other family members on the Members page and activity feed.
-        </p>
+        <p className="text-xs text-muted mt-1">{dict.profile.displayNameHint}</p>
       </div>
 
       <div>
@@ -41,7 +41,7 @@ export function ProfileForm({ defaultDisplayName, email }: Props) {
           htmlFor="profile-email"
           className="block text-sm font-medium text-foreground/80 mb-1"
         >
-          Email
+          {dict.profile.email}
         </label>
         <input
           id="profile-email"
@@ -50,11 +50,11 @@ export function ProfileForm({ defaultDisplayName, email }: Props) {
           disabled
           className="w-full px-4 py-2 border border-line rounded-lg bg-background text-muted"
         />
-        <p className="text-xs text-muted mt-1">Email is managed by your sign-in provider.</p>
+        <p className="text-xs text-muted mt-1">{dict.profile.emailHint}</p>
       </div>
 
       {state && "success" in state && state.success && (
-        <p className="text-sm text-green-600">Saved.</p>
+        <p className="text-sm text-green-600">{dict.profile.saved}</p>
       )}
 
       <button
@@ -62,7 +62,7 @@ export function ProfileForm({ defaultDisplayName, email }: Props) {
         disabled={pending}
         className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-strong disabled:opacity-50 text-sm"
       >
-        {pending ? "Saving..." : "Save changes"}
+        {pending ? dict.common.saving : dict.common.saveChanges}
       </button>
     </form>
   );

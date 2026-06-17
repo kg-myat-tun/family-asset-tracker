@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { I18nProvider } from "@/components/i18n/I18nProvider";
+import { getServerI18n } from "@/lib/i18n/server";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -6,13 +8,15 @@ export const metadata: Metadata = {
   description: "Track your family's assets and loans across currencies.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { locale, dict } = await getServerI18n();
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <head>
         {/* Apply the saved/system theme before first paint to avoid a flash. */}
         <script
@@ -22,7 +26,11 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <I18nProvider locale={locale} dict={dict}>
+          {children}
+        </I18nProvider>
+      </body>
     </html>
   );
 }
