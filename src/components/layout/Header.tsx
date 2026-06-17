@@ -1,5 +1,6 @@
 import type { Family } from "@/types";
 import { LogoutButton } from "./LogoutButton";
+import { NotificationBell } from "./NotificationBell";
 import { ThemeToggle } from "./ThemeToggle";
 
 interface HeaderProps {
@@ -43,6 +44,7 @@ export function Header({ user, family, onMenuClick }: HeaderProps) {
       </div>
       <div className="flex items-center gap-3 md:gap-4 min-w-0">
         <span className="hidden sm:inline text-sm text-foreground/70 truncate">{user.email}</span>
+        <NotificationBell familyId={family.id} />
         <ThemeToggle />
         <LogoutButton />
       </div>

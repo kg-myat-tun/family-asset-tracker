@@ -19,7 +19,9 @@ export function OnboardingForm() {
             type="button"
             onClick={() => setMode(m)}
             className={`flex-1 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              mode === m ? "bg-card shadow-sm text-foreground" : "text-muted hover:text-foreground/80"
+              mode === m
+                ? "bg-card shadow-sm text-foreground"
+                : "text-muted hover:text-foreground/80"
             }`}
           >
             {m === "create" ? "Create a family" : "Join a family"}
@@ -52,7 +54,10 @@ function CreateFamilyForm() {
       </div>
 
       <div>
-        <label htmlFor="base-currency" className="block text-sm font-medium text-foreground/80 mb-1">
+        <label
+          htmlFor="base-currency"
+          className="block text-sm font-medium text-foreground/80 mb-1"
+        >
           Base currency
         </label>
         <select

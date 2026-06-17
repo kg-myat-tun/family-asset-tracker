@@ -7,7 +7,16 @@ import { logActivity } from "@/lib/activity.server";
 import { requireUser } from "@/lib/auth.server";
 import { formatCurrency } from "@/lib/currency.server";
 import { getFamilyForUser, getFamilyMembers } from "@/lib/family.server";
-import { createLoan, getLoan, recordRepayment } from "@/lib/loans.server";
+import {
+  createLoan,
+  deleteLoan,
+  getLoan,
+  getRepayments,
+  recordRepayment,
+  updateLoan,
+} from "@/lib/loans.server";
+import { canViewLoan } from "@/lib/visibility";
+import type { Loan } from "@/types";
 
 export type LoanFormState = { errors?: Record<string, string[]> } | null;
 
@@ -16,6 +25,15 @@ async function getContextOrThrow() {
   const family = await getFamilyForUser(user.uid);
   if (!family) throw new Error("No family");
   return { user, family };
+}
+
+// A loan can be edited or deleted by either participating family member, or by
+// any family admin.
+async function assertCanMutateLoan(familyId: string, loan: Loan, callerUid: string) {
+  if (loan.lenderId === callerUid || loan.borrowerId === callerUid) return;
+  const members = await getFamilyMembers(familyId);
+  const self = members.find((m) => m.uid === callerUid);
+  if (self?.role !== "admin") throw new Error("Not authorized");
 }
 
 const CreateLoanSchema = z
@@ -30,6 +48,12 @@ const CreateLoanSchema = z
     currency: z.string().length(3),
     principalAmount: z.coerce.number().positive("Amount must be positive"),
     interestRate: z.coerce.number().min(0).max(100).optional(),
+    compoundingPeriod: z.enum(["none", "monthly", "annually"]).default("none"),
+    installmentCount: z.coerce.number().int().min(1).max(600).optional(),
+    firstPaymentDate: z
+      .string()
+      .optional()
+      .transform((v) => (v ? new Date(v) : undefined)),
     description: z.string().min(1, "Description is required").max(300),
     dueDate: z
       .string()
@@ -61,9 +85,10 @@ export async function createLoanAction(
   const { user, family } = await getContextOrThrow();
 
   const raw = Object.fromEntries(formData);
-  // interestRate and dueDate are optional — drop empty strings before parsing
-  if (raw.interestRate === "") delete (raw as Record<string, unknown>).interestRate;
-  if (raw.dueDate === "") delete (raw as Record<string, unknown>).dueDate;
+  // Optional fields — drop empty strings before parsing.
+  for (const key of ["interestRate", "dueDate", "installmentCount", "firstPaymentDate"]) {
+    if (raw[key] === "") delete (raw as Record<string, unknown>)[key];
+  }
 
   const parsed = CreateLoanSchema.safeParse(raw);
   if (!parsed.success) return { errors: parsed.error.flatten().fieldErrors };
@@ -101,6 +126,9 @@ export async function createLoanAction(
     currency: parsed.data.currency,
     principalAmount: parsed.data.principalAmount,
     interestRate: parsed.data.interestRate,
+    compoundingPeriod: parsed.data.compoundingPeriod,
+    installmentCount: parsed.data.installmentCount,
+    firstPaymentDate: parsed.data.firstPaymentDate,
     description: parsed.data.description,
     dueDate: parsed.data.dueDate,
   });
@@ -119,6 +147,89 @@ export async function createLoanAction(
 
   revalidatePath("/loans");
   redirect(`/loans/${loanId}`);
+}
+
+const UpdateLoanSchema = z.object({
+  visibility: z.enum(["private", "shared"]).default("shared"),
+  description: z.string().min(1, "Description is required").max(300),
+  interestRate: z.coerce.number().min(0).max(100).optional(),
+  compoundingPeriod: z.enum(["none", "monthly", "annually"]).default("none"),
+  installmentCount: z.coerce.number().int().min(1).max(600).optional(),
+  firstPaymentDate: z
+    .string()
+    .optional()
+    .transform((v) => (v ? new Date(v) : undefined)),
+  dueDate: z
+    .string()
+    .optional()
+    .transform((v) => (v ? new Date(v) : undefined)),
+  principalAmount: z.coerce.number().positive("Amount must be positive").optional(),
+  currency: z.string().length(3).optional(),
+});
+
+export async function updateLoanAction(
+  loanId: string,
+  _prevState: LoanFormState,
+  formData: FormData,
+): Promise<LoanFormState> {
+  const { user, family } = await getContextOrThrow();
+
+  const loan = await getLoan(family.id, loanId);
+  if (!loan || !canViewLoan(loan, user.uid)) return { errors: { _: ["Loan not found"] } };
+  await assertCanMutateLoan(family.id, loan, user.uid);
+
+  const raw = Object.fromEntries(formData);
+  for (const key of [
+    "interestRate",
+    "dueDate",
+    "principalAmount",
+    "installmentCount",
+    "firstPaymentDate",
+  ]) {
+    if (raw[key] === "") delete (raw as Record<string, unknown>)[key];
+  }
+
+  const parsed = UpdateLoanSchema.safeParse(raw);
+  if (!parsed.success) return { errors: parsed.error.flatten().fieldErrors };
+
+  // Principal and currency can only be amended before any repayment is recorded;
+  // afterwards they would desync the balance, so silently ignore them.
+  const repayments = await getRepayments(family.id, loanId);
+  const editableAmount = repayments.length === 0;
+
+  const compoundingPeriod = parsed.data.interestRate ? parsed.data.compoundingPeriod : "none";
+
+  await updateLoan(family.id, loanId, {
+    description: parsed.data.description,
+    visibility: parsed.data.visibility,
+    dueDate: parsed.data.dueDate ?? null,
+    interestRate: parsed.data.interestRate ?? null,
+    compoundingPeriod,
+    installmentCount: parsed.data.installmentCount ?? null,
+    firstPaymentDate: parsed.data.firstPaymentDate ?? null,
+    principalAmount: editableAmount ? parsed.data.principalAmount : undefined,
+    currency: editableAmount ? parsed.data.currency : undefined,
+  });
+
+  await logActivity(family.id, "loan_updated", `Updated loan "${parsed.data.description}"`);
+
+  revalidatePath("/loans");
+  revalidatePath(`/loans/${loanId}`);
+  redirect(`/loans/${loanId}`);
+}
+
+export async function deleteLoanAction(loanId: string): Promise<void> {
+  const { user, family } = await getContextOrThrow();
+
+  const loan = await getLoan(family.id, loanId);
+  if (!loan || !canViewLoan(loan, user.uid)) throw new Error("Not found");
+  await assertCanMutateLoan(family.id, loan, user.uid);
+
+  await deleteLoan(family.id, loanId);
+  await logActivity(family.id, "loan_deleted", `Deleted loan "${loan.description}"`);
+
+  revalidatePath("/loans");
+  redirect("/loans");
 }
 
 const RepaymentSchema = z.object({

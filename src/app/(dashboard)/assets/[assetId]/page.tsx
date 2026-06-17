@@ -40,10 +40,7 @@ export default async function AssetDetailPage({
         </div>
         {canMutate && (
           <div className="flex items-center gap-3">
-            <Link
-              href={`/assets/${asset.id}/edit`}
-              className="text-sm text-accent hover:underline"
-            >
+            <Link href={`/assets/${asset.id}/edit`} className="text-sm text-accent hover:underline">
               Edit
             </Link>
             <DeleteAssetButton assetId={asset.id} label={asset.name} />

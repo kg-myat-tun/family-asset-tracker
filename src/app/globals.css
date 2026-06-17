@@ -5,14 +5,14 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #f7f4ed;
-  --foreground: #1f2937;
-  --card: #fffdf9;
-  --line: #dccfb6;
-  --accent: #1d4ed8;
-  --accent-strong: #173f91;
-  --accent-soft: #dbeafe;
-  --muted: #6b7280;
+  --background: #f8fafc;
+  --foreground: #1e293b;
+  --card: #ffffff;
+  --line: #bcccdc;
+  --accent: #2563eb;
+  --accent-strong: #1d4ed8;
+  --accent-soft: #d9eafd;
+  --muted: #64748b;
 }
 
 .dark {
@@ -38,40 +38,38 @@
   --font-sans: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 }
 
-html {
-  background:
-    radial-gradient(circle at top left, rgba(29, 78, 216, 0.08), transparent 26%),
-    linear-gradient(180deg, #fcfaf5 0%, #f7f4ed 100%);
-}
+@layer base {
+  html {
+    background: var(--background);
+  }
 
-html.dark {
-  background:
-    radial-gradient(circle at top left, rgba(59, 130, 246, 0.12), transparent 28%),
-    linear-gradient(180deg, #13161e 0%, #11141b 100%);
-  color-scheme: dark;
-}
+  html.dark {
+    background: var(--background);
+    color-scheme: dark;
+  }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans);
-}
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+  }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 
-* {
-  border-color: var(--line);
-}
+  * {
+    border-color: var(--line);
+  }
 
-::selection {
-  background: rgba(29, 78, 216, 0.16);
+  ::selection {
+    background: rgba(29, 78, 216, 0.16);
+  }
 }
 
 @layer components {
-  /* Cream surface used by every panel — soft warm shadow gives depth without
+  /* Surface used by every panel — soft shadow gives depth without
      the flat "bg-white + gray border" look. */
   .card {
     background: var(--card);
@@ -95,7 +93,7 @@ a {
     transform: translateY(-2px);
   }
 
-  /* Primary action — accent gradient with a subtle lift. */
+  /* Primary action — solid accent with a subtle lift. */
   .btn-primary {
     display: inline-flex;
     align-items: center;
@@ -105,24 +103,20 @@ a {
     font-size: 0.875rem;
     font-weight: 600;
     color: #fff;
-    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
-    box-shadow: 0 10px 22px -12px rgba(29, 78, 216, 0.7);
+    background: var(--accent);
     transition:
-      filter 0.15s ease,
+      background-color 0.15s ease,
       transform 0.15s ease;
   }
 
   .btn-primary:hover {
-    filter: brightness(1.06);
+    background: var(--accent-strong);
     transform: translateY(-1px);
   }
 
   /* Hero panel for the headline net-worth figure. */
-  .hero-gradient {
-    background:
-      radial-gradient(circle at top right, rgba(255, 255, 255, 0.18), transparent 45%),
-      linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
-    box-shadow: 0 28px 60px -30px rgba(23, 63, 145, 0.7);
+  .hero-panel {
+    background: var(--accent);
   }
 
   /* Small accent-tinted badge for section icons. */

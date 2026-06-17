@@ -1,7 +1,10 @@
+import Link from "next/link";
 import { VisibilityBadge } from "@/components/ui/VisibilityBadge";
 import { convertAmount, formatCurrency } from "@/lib/currency.server";
+import { buildSchedule, hasSchedule, liveLoanState, nextInstallment } from "@/lib/loan-interest";
 import { borrowerName, isExternalParty, lenderName } from "@/lib/loan-party";
 import type { FamilyMember, Loan, Repayment } from "@/types";
+import { DeleteLoanButton } from "./DeleteLoanButton";
 import { RepaymentForm } from "./RepaymentForm";
 
 interface Props {
@@ -11,19 +14,46 @@ interface Props {
   baseCurrency: string;
   rates: Record<string, number>;
   canAct: boolean;
+  canMutate: boolean;
 }
 
-export function LoanDetail({ loan, repayments, memberMap, baseCurrency, rates, canAct }: Props) {
+export function LoanDetail({
+  loan,
+  repayments,
+  memberMap,
+  baseCurrency,
+  rates,
+  canAct,
+  canMutate,
+}: Props) {
   const lender = lenderName(loan, memberMap);
   const borrower = borrowerName(loan, memberMap);
-  const progressPct = ((loan.principalAmount - loan.remainingAmount) / loan.principalAmount) * 100;
+  const { principalOutstanding, accruedInterest, totalOwed } = liveLoanState(loan);
+  const principalRepaid = loan.principalAmount - principalOutstanding;
+  const progressPct = (principalRepaid / loan.principalAmount) * 100;
+  const hasInterest = loan.compoundingPeriod !== "none" && (loan.interestRate ?? 0) > 0;
+  const schedule = hasSchedule(loan) ? buildSchedule(loan) : [];
+  const next = nextInstallment(loan);
 
   return (
     <div className="max-w-2xl space-y-6">
       <div className="bg-card rounded-xl border border-line p-6 space-y-4">
-        <div className="flex items-center gap-3 flex-wrap">
-          <h1 className="text-xl font-semibold text-foreground">{loan.description}</h1>
-          <VisibilityBadge visibility={loan.visibility} />
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-xl font-semibold text-foreground">{loan.description}</h1>
+            <VisibilityBadge visibility={loan.visibility} />
+          </div>
+          {canMutate && (
+            <div className="flex items-center gap-3 shrink-0">
+              <Link
+                href={`/loans/${loan.id}/edit`}
+                className="text-sm text-accent hover:underline"
+              >
+                Edit
+              </Link>
+              <DeleteLoanButton loanId={loan.id} label={loan.description} />
+            </div>
+          )}
         </div>
 
         <div className="flex gap-8 text-sm flex-wrap">
@@ -59,9 +89,9 @@ export function LoanDetail({ loan, repayments, memberMap, baseCurrency, rates, c
 
         <div>
           <div className="flex justify-between text-sm mb-1">
-            <span className="text-muted">Repaid</span>
+            <span className="text-muted">Principal repaid</span>
             <span className="font-medium">
-              {formatCurrency(loan.principalAmount - loan.remainingAmount, loan.currency)} of{" "}
+              {formatCurrency(principalRepaid, loan.currency)} of{" "}
               {formatCurrency(loan.principalAmount, loan.currency)}
             </span>
           </div>
@@ -71,27 +101,115 @@ export function LoanDetail({ loan, repayments, memberMap, baseCurrency, rates, c
               style={{ width: `${Math.min(progressPct, 100)}%` }}
             />
           </div>
-          <p className="text-sm text-muted mt-1">
-            Remaining:{" "}
-            <span className="font-semibold text-foreground">
-              {formatCurrency(loan.remainingAmount, loan.currency)}
-            </span>
-            {loan.currency !== baseCurrency && (
-              <span className="text-muted">
-                {" "}
-                ≈{" "}
-                {formatCurrency(
-                  convertAmount(loan.remainingAmount, loan.currency, baseCurrency, rates),
-                  baseCurrency,
-                )}
-              </span>
-            )}
-          </p>
         </div>
+
+        {hasInterest && (
+          <dl className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm border-t border-line pt-4">
+            <div className="flex justify-between col-span-2 sm:col-span-1">
+              <dt className="text-muted">Principal outstanding</dt>
+              <dd className="font-medium tabular-nums">
+                {formatCurrency(principalOutstanding, loan.currency)}
+              </dd>
+            </div>
+            <div className="flex justify-between col-span-2 sm:col-span-1">
+              <dt className="text-muted">
+                Accrued interest
+                <span className="ml-1 text-xs text-muted/70">
+                  ({loan.interestRate}% {loan.compoundingPeriod})
+                </span>
+              </dt>
+              <dd className="font-medium tabular-nums text-amber-600 dark:text-amber-400">
+                {formatCurrency(accruedInterest, loan.currency)}
+              </dd>
+            </div>
+          </dl>
+        )}
+
+        <p className="text-sm text-muted">
+          {hasInterest ? "Total owed" : "Remaining"}:{" "}
+          <span className="font-semibold text-foreground">
+            {formatCurrency(totalOwed, loan.currency)}
+          </span>
+          {loan.currency !== baseCurrency && (
+            <span className="text-muted">
+              {" "}
+              ≈{" "}
+              {formatCurrency(
+                convertAmount(totalOwed, loan.currency, baseCurrency, rates),
+                baseCurrency,
+              )}
+            </span>
+          )}
+        </p>
+
+        {next && loan.status !== "settled" && (
+          <p
+            className={`text-sm border-t border-line pt-4 ${
+              next.status === "overdue" ? "text-red-600 dark:text-red-400" : "text-muted"
+            }`}
+          >
+            {next.status === "overdue" ? "Installment overdue" : "Next payment"}:{" "}
+            <span className="font-semibold text-foreground">
+              {formatCurrency(next.payment, loan.currency)}
+            </span>{" "}
+            due {next.dueDate.toLocaleDateString()} (#{next.number} of {loan.installmentCount})
+          </p>
+        )}
       </div>
 
       {canAct && loan.status !== "settled" && (
         <RepaymentForm loanId={loan.id} loanCurrency={loan.currency} />
+      )}
+
+      {schedule.length > 0 && (
+        <details className="bg-card rounded-xl border border-line p-4">
+          <summary className="text-sm font-medium text-foreground cursor-pointer">
+            Repayment schedule ({loan.installmentCount} monthly installments)
+          </summary>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-muted border-b border-line">
+                  <th className="py-1.5 pr-3 font-medium">#</th>
+                  <th className="py-1.5 pr-3 font-medium">Due</th>
+                  <th className="py-1.5 pr-3 font-medium text-right">Payment</th>
+                  <th className="py-1.5 pr-3 font-medium text-right">Principal</th>
+                  <th className="py-1.5 pr-3 font-medium text-right">Interest</th>
+                  <th className="py-1.5 font-medium text-right">Balance</th>
+                </tr>
+              </thead>
+              <tbody>
+                {schedule.map((row) => (
+                  <tr
+                    key={row.number}
+                    className={`border-b border-line/60 last:border-0 ${
+                      row.status === "paid"
+                        ? "text-muted line-through"
+                        : row.status === "overdue"
+                          ? "text-red-600 dark:text-red-400"
+                          : "text-foreground"
+                    }`}
+                  >
+                    <td className="py-1.5 pr-3 tabular-nums">{row.number}</td>
+                    <td className="py-1.5 pr-3 tabular-nums">{row.dueDate.toLocaleDateString()}</td>
+                    <td className="py-1.5 pr-3 text-right tabular-nums">
+                      {formatCurrency(row.payment, loan.currency)}
+                    </td>
+                    <td className="py-1.5 pr-3 text-right tabular-nums">
+                      {formatCurrency(row.principal, loan.currency)}
+                    </td>
+                    <td className="py-1.5 pr-3 text-right tabular-nums">
+                      {formatCurrency(row.interest, loan.currency)}
+                    </td>
+                    <td className="py-1.5 text-right tabular-nums">
+                      {formatCurrency(row.balance, loan.currency)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
       )}
 
       {repayments.length > 0 && (
@@ -104,6 +222,12 @@ export function LoanDetail({ loan, repayments, memberMap, baseCurrency, rates, c
             >
               <div>
                 <p className="text-sm font-medium">{formatCurrency(r.amount, r.currency)}</p>
+                {r.interestPortion > 0.005 && (
+                  <p className="text-xs text-muted">
+                    {formatCurrency(r.principalPortion, loan.currency)} principal ·{" "}
+                    {formatCurrency(r.interestPortion, loan.currency)} interest
+                  </p>
+                )}
                 {r.note && <p className="text-xs text-muted">{r.note}</p>}
                 <p className="text-xs text-muted">{r.paidAt.toLocaleDateString()}</p>
               </div>

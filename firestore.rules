@@ -14,5 +14,12 @@ service cloud.firestore {
     match /families/{familyId}/activity/{activityId} {
       allow read: if isMember(familyId);
     }
+
+    // Notifications are per-recipient; a member only reads their own. Writes go
+    // through the Admin SDK (cron + mark-as-read server action), so stay denied.
+    match /families/{familyId}/notifications/{notificationId} {
+      allow read: if isMember(familyId)
+        && resource.data.recipientUid == request.auth.uid;
+    }
   }
 }

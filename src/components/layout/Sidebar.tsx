@@ -1,15 +1,16 @@
 "use client";
 
+import { Handshake, LayoutDashboard, User, Users, Wallet } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Family } from "@/types";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Overview", icon: "📊" },
-  { href: "/assets", label: "Assets", icon: "💰" },
-  { href: "/loans", label: "Loans", icon: "🤝" },
-  { href: "/members", label: "Members", icon: "👥" },
-  { href: "/profile", label: "Profile", icon: "👤" },
+  { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
+  { href: "/assets", label: "Assets", icon: Wallet },
+  { href: "/loans", label: "Loans", icon: Handshake },
+  { href: "/members", label: "Members", icon: Users },
+  { href: "/profile", label: "Profile", icon: User },
 ];
 
 export function Sidebar({ family, onNavigate }: { family: Family; onNavigate?: () => void }) {
@@ -29,6 +30,7 @@ export function Sidebar({ family, onNavigate }: { family: Family; onNavigate?: (
       <nav className="flex-1 p-3 space-y-1">
         {NAV_ITEMS.map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const Icon = item.icon;
           return (
             <Link
               key={item.href}
@@ -41,7 +43,7 @@ export function Sidebar({ family, onNavigate }: { family: Family; onNavigate?: (
                   : "text-foreground/80 hover:bg-foreground/4"
               }`}
             >
-              <span className="text-base">{item.icon}</span>
+              <Icon className="w-4.5 h-4.5 shrink-0" aria-hidden="true" />
               {item.label}
             </Link>
           );

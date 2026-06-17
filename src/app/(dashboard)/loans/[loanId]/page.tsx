@@ -22,7 +22,9 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ loa
   if (!loan || !canViewLoan(loan, user.uid)) notFound();
 
   const memberMap = Object.fromEntries(members.map((m) => [m.uid, m]));
+  const self = members.find((m) => m.uid === user.uid);
   const canAct = loan.lenderId === user.uid || loan.borrowerId === user.uid;
+  const canMutate = canAct || self?.role === "admin";
 
   return (
     <LoanDetail
@@ -32,6 +34,7 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ loa
       baseCurrency={family.baseCurrency}
       rates={rates}
       canAct={canAct}
+      canMutate={canMutate}
     />
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { TriangleAlert } from "lucide-react";
 import { useEffect } from "react";
 
 export default function DashboardError({
@@ -15,7 +16,9 @@ export default function DashboardError({
 
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center">
-      <p className="text-5xl mb-4">⚠️</p>
+      <span className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-50 text-red-600 mb-4">
+        <TriangleAlert className="w-7 h-7" aria-hidden="true" />
+      </span>
       <h2 className="text-lg font-semibold text-foreground mb-2">Something went wrong</h2>
       <p className="text-muted text-sm mb-6 max-w-sm">{error.message}</p>
       <button

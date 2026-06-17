@@ -1,125 +1,41 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { createLoanAction, type LoanFormState } from "@/actions/loan.actions";
+import { useActionState } from "react";
+import type { LoanFormState } from "@/actions/loan.actions";
 import { VisibilityField } from "@/components/ui/VisibilityField";
-import type { FamilyMember } from "@/types";
+import { borrowerName, lenderName } from "@/lib/loan-party";
+import type { FamilyMember, Loan } from "@/types";
 
 const COMMON_CURRENCIES = ["USD", "EUR", "GBP", "THB", "JPY", "SGD", "AUD", "CAD"];
 
-type Direction = "lent" | "borrowed";
-type CounterpartyType = "member" | "external";
-
 interface Props {
-  candidates: FamilyMember[];
-  defaultCurrency: string;
+  action: (prevState: LoanFormState, formData: FormData) => Promise<LoanFormState>;
+  loan: Loan;
+  memberMap: Record<string, FamilyMember>;
+  // Principal and currency are only editable before any repayment is recorded.
+  editableAmount: boolean;
 }
 
-export function LoanForm({ candidates, defaultCurrency }: Props) {
-  const [state, formAction, pending] = useActionState<LoanFormState, FormData>(
-    createLoanAction,
-    null,
-  );
-  const [direction, setDirection] = useState<Direction>("lent");
-  const [counterpartyType, setCounterpartyType] = useState<CounterpartyType>(
-    candidates.length > 0 ? "member" : "external",
-  );
+function toDateInput(d: Date | null): string {
+  if (!d) return "";
+  return d.toISOString().split("T")[0];
+}
 
-  const counterpartyLabel = direction === "lent" ? "Borrower" : "Lender";
+export function LoanEditForm({ action, loan, memberMap, editableAmount }: Props) {
+  const [state, formAction, pending] = useActionState<LoanFormState, FormData>(action, null);
 
   return (
     <form action={formAction} className="space-y-5">
-      <input type="hidden" name="direction" value={direction} />
-      <input type="hidden" name="counterpartyType" value={counterpartyType} />
-
-      {/* Direction */}
-      <div>
-        <span className="block text-sm font-medium text-foreground/80 mb-1.5">Type</span>
-        <div className="flex gap-1 bg-foreground/6 rounded-lg p-1">
-          {(
-            [
-              ["lent", "I lent money"],
-              ["borrowed", "I borrowed money"],
-            ] as const
-          ).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setDirection(value)}
-              className={`flex-1 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                direction === value
-                  ? "bg-card shadow-sm text-foreground"
-                  : "text-muted hover:text-foreground/80"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+      {/* Parties are fixed once a loan exists — delete and recreate to change them. */}
+      <div className="flex gap-8 text-sm">
+        <div>
+          <span className="block text-muted">Lender</span>
+          <span className="font-medium">{lenderName(loan, memberMap)}</span>
         </div>
-      </div>
-
-      {/* Counterparty: a family member or an external person/org */}
-      <div>
-        <div className="flex items-center justify-between mb-1.5">
-          <span className="text-sm font-medium text-foreground/80">{counterpartyLabel}</span>
-          <div className="flex gap-1 bg-foreground/6 rounded-lg p-0.5 text-xs">
-            {(
-              [
-                ["member", "Family member"],
-                ["external", "External"],
-              ] as const
-            ).map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setCounterpartyType(value)}
-                disabled={value === "member" && candidates.length === 0}
-                className={`px-2.5 py-1 rounded-md font-medium transition-colors disabled:opacity-40 ${
-                  counterpartyType === value
-                    ? "bg-card shadow-sm text-foreground"
-                    : "text-muted hover:text-foreground/80"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+        <div>
+          <span className="block text-muted">Borrower</span>
+          <span className="font-medium">{borrowerName(loan, memberMap)}</span>
         </div>
-
-        {counterpartyType === "member" ? (
-          <select
-            id="loan-counterparty"
-            name="counterpartyId"
-            required
-            defaultValue=""
-            className="w-full px-4 py-2 border border-line rounded-lg"
-          >
-            <option value="" disabled>
-              Select a family member
-            </option>
-            {candidates.map((m) => (
-              <option key={m.uid} value={m.uid}>
-                {m.displayName}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <input
-            id="loan-counterparty"
-            name="counterpartyName"
-            type="text"
-            required
-            maxLength={120}
-            placeholder="e.g. John Smith, Bank of Example"
-            className="w-full px-4 py-2 border border-line rounded-lg"
-          />
-        )}
-        {state?.errors?.counterpartyId && (
-          <p className="text-sm text-red-500 mt-1">{state.errors.counterpartyId[0]}</p>
-        )}
-        {state?.errors?.counterpartyName && (
-          <p className="text-sm text-red-500 mt-1">{state.errors.counterpartyName[0]}</p>
-        )}
       </div>
 
       <div className="flex gap-3">
@@ -137,8 +53,9 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
             step="0.01"
             min="0.01"
             inputMode="decimal"
-            required
-            className="w-full px-4 py-2 border border-line rounded-lg"
+            defaultValue={loan.principalAmount}
+            disabled={!editableAmount}
+            className="w-full px-4 py-2 border border-line rounded-lg disabled:opacity-50"
           />
           {state?.errors?.principalAmount && (
             <p className="text-sm text-red-500 mt-1">{state.errors.principalAmount[0]}</p>
@@ -154,10 +71,11 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
           <select
             id="loan-currency"
             name="currency"
-            defaultValue={defaultCurrency}
-            className="w-full px-4 py-2 border border-line rounded-lg"
+            defaultValue={loan.currency}
+            disabled={!editableAmount}
+            className="w-full px-4 py-2 border border-line rounded-lg disabled:opacity-50"
           >
-            {COMMON_CURRENCIES.map((c) => (
+            {[loan.currency, ...COMMON_CURRENCIES.filter((c) => c !== loan.currency)].map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>
@@ -165,6 +83,11 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
           </select>
         </div>
       </div>
+      {!editableAmount && (
+        <p className="-mt-3 text-xs text-muted">
+          Principal and currency are locked once a repayment exists.
+        </p>
+      )}
 
       <div className="flex gap-3">
         <div className="flex-1">
@@ -182,6 +105,7 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
             min="0"
             max="100"
             inputMode="decimal"
+            defaultValue={loan.interestRate ?? ""}
             className="w-full px-4 py-2 border border-line rounded-lg"
           />
         </div>
@@ -195,7 +119,7 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
           <select
             id="loan-compounding"
             name="compoundingPeriod"
-            defaultValue="monthly"
+            defaultValue={loan.compoundingPeriod}
             className="w-full px-4 py-2 border border-line rounded-lg"
           >
             <option value="none">No interest</option>
@@ -223,6 +147,7 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
             max="600"
             inputMode="numeric"
             placeholder="e.g. 12"
+            defaultValue={loan.installmentCount ?? ""}
             className="w-full px-4 py-2 border border-line rounded-lg"
           />
         </div>
@@ -237,6 +162,7 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
             id="loan-first-payment"
             name="firstPaymentDate"
             type="date"
+            defaultValue={toDateInput(loan.firstPaymentDate)}
             className="w-full px-4 py-2 border border-line rounded-lg"
           />
         </div>
@@ -250,6 +176,7 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
           id="loan-due"
           name="dueDate"
           type="date"
+          defaultValue={toDateInput(loan.dueDate)}
           className="w-full px-4 py-2 border border-line rounded-lg"
         />
       </div>
@@ -266,6 +193,7 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
           name="description"
           rows={3}
           required
+          defaultValue={loan.description}
           className="w-full px-4 py-2 border border-line rounded-lg"
         />
         {state?.errors?.description && (
@@ -273,14 +201,16 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
         )}
       </div>
 
-      <VisibilityField defaultValue="shared" />
+      <VisibilityField defaultValue={loan.visibility} />
+
+      {state?.errors?._ && <p className="text-sm text-red-500">{state.errors._[0]}</p>}
 
       <button
         type="submit"
         disabled={pending}
         className="w-full py-2 px-4 bg-accent text-white rounded-lg hover:bg-accent-strong disabled:opacity-50"
       >
-        {pending ? "Saving..." : "Create loan"}
+        {pending ? "Saving..." : "Save changes"}
       </button>
     </form>
   );

@@ -1,3 +1,4 @@
+import { Wallet } from "lucide-react";
 import Link from "next/link";
 import { AssetList } from "@/components/assets/AssetList";
 import { getAssets } from "@/lib/assets.server";
@@ -50,7 +51,9 @@ export default async function AssetsPage({
             {formatCurrency(totalInBase, family.baseCurrency)}
           </p>
         </div>
-        <span className="icon-chip text-xl">💰</span>
+        <span className="icon-chip">
+          <Wallet className="w-5 h-5" aria-hidden="true" />
+        </span>
       </div>
 
       <AssetList assets={filtered} baseCurrency={family.baseCurrency} rates={rates} />

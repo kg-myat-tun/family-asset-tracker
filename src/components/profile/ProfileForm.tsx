@@ -37,7 +37,10 @@ export function ProfileForm({ defaultDisplayName, email }: Props) {
       </div>
 
       <div>
-        <label htmlFor="profile-email" className="block text-sm font-medium text-foreground/80 mb-1">
+        <label
+          htmlFor="profile-email"
+          className="block text-sm font-medium text-foreground/80 mb-1"
+        >
           Email
         </label>
         <input
