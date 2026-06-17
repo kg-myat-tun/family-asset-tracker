@@ -42,6 +42,11 @@ export async function createAssetAction(
 ): Promise<AssetFormState> {
   const { user, family } = await getContextOrThrow();
 
+  const members = await getFamilyMembers(family.id);
+  if (members.find((m) => m.uid === user.uid)?.role === "viewer") {
+    return { errors: { _: ["Viewers cannot add assets"] } };
+  }
+
   const parsed = AssetSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { errors: parsed.error.flatten().fieldErrors };
 

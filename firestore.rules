@@ -6,9 +6,12 @@ service cloud.firestore {
     // which bypasses these rules. The client SDK only reads the activity feed,
     // so that is the only path we open up here. Everything else stays denied.
 
+    // A caller is a member only while their membership is active — removed
+    // members keep a doc (status: "removed") but must lose read access.
     function isMember(familyId) {
       return request.auth != null
-        && exists(/databases/$(database)/documents/families/$(familyId)/members/$(request.auth.uid));
+        && exists(/databases/$(database)/documents/families/$(familyId)/members/$(request.auth.uid))
+        && get(/databases/$(database)/documents/families/$(familyId)/members/$(request.auth.uid)).data.status == 'active';
     }
 
     match /families/{familyId}/activity/{activityId} {

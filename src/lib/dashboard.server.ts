@@ -2,21 +2,32 @@ import "server-only";
 
 import { getAdminDb } from "@/firebase/admin";
 import { convertAmount, getCachedRates } from "@/lib/currency.server";
+import { liveLoanState } from "@/lib/loan-interest";
+import { getNetWorthSnapshots } from "@/lib/networth.server";
 import { canViewAsset, canViewLoan } from "@/lib/visibility";
-import type { Asset, CompoundingPeriod, FamilyMember, Loan } from "@/types";
+import type { Asset, CompoundingPeriod, FamilyMember, Loan, NetWorthSnapshot } from "@/types";
 
 export interface MemberSummary {
   member: FamilyMember;
+  // Assets only (kept for the by-member assets chart).
   totalInBase: number;
   assetCount: number;
+  // Loans, in base currency: owed to this member vs owed by them.
+  receivables: number;
+  liabilities: number;
+  netWorth: number;
 }
 
 export interface DashboardData {
   totalNetWorth: number;
+  assetsTotal: number;
+  receivablesTotal: number;
+  liabilitiesTotal: number;
   memberSummaries: MemberSummary[];
   activeLoans: Loan[];
   overdueLoans: Loan[];
   recentAssets: Asset[];
+  snapshots: NetWorthSnapshot[];
 }
 
 export async function getDashboardData(
@@ -89,18 +100,50 @@ export async function getDashboardData(
     })
     .filter((l) => canViewLoan(l, viewerUid));
 
+  // Loan balances in base currency, keyed by the member on each side.
+  const owedTo = new Map<string, number>();
+  const owedBy = new Map<string, number>();
+  for (const loan of activeLoans) {
+    const owed = convertAmount(liveLoanState(loan).totalOwed, loan.currency, baseCurrency, rates);
+    if (loan.lenderId) owedTo.set(loan.lenderId, (owedTo.get(loan.lenderId) ?? 0) + owed);
+    if (loan.borrowerId) owedBy.set(loan.borrowerId, (owedBy.get(loan.borrowerId) ?? 0) + owed);
+  }
+
   const memberSummaries: MemberSummary[] = members.map((member) => {
     const memberAssets = assets.filter((a) => a.ownerId === member.uid);
     const totalInBase = memberAssets.reduce(
       (sum, a) => sum + convertAmount(a.amount, a.currency, baseCurrency, rates),
       0,
     );
-    return { member, totalInBase, assetCount: memberAssets.length };
+    const receivables = owedTo.get(member.uid) ?? 0;
+    const liabilities = owedBy.get(member.uid) ?? 0;
+    return {
+      member,
+      totalInBase,
+      assetCount: memberAssets.length,
+      receivables,
+      liabilities,
+      netWorth: totalInBase + receivables - liabilities,
+    };
   });
 
-  const totalNetWorth = memberSummaries.reduce((sum, s) => sum + s.totalInBase, 0);
+  const assetsTotal = memberSummaries.reduce((sum, s) => sum + s.totalInBase, 0);
+  const receivablesTotal = memberSummaries.reduce((sum, s) => sum + s.receivables, 0);
+  const liabilitiesTotal = memberSummaries.reduce((sum, s) => sum + s.liabilities, 0);
+  const totalNetWorth = assetsTotal + receivablesTotal - liabilitiesTotal;
   const overdueLoans = activeLoans.filter((l) => l.dueDate && l.dueDate < today);
   const recentAssets = assets.slice(0, 5);
+  const snapshots = await getNetWorthSnapshots(familyId, 90);
 
-  return { totalNetWorth, memberSummaries, activeLoans, overdueLoans, recentAssets };
+  return {
+    totalNetWorth,
+    assetsTotal,
+    receivablesTotal,
+    liabilitiesTotal,
+    memberSummaries,
+    activeLoans,
+    overdueLoans,
+    recentAssets,
+    snapshots,
+  };
 }

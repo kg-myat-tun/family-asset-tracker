@@ -1,13 +1,15 @@
 import type { LucideIcon } from "lucide-react";
-import { BarChart3, Handshake, Users, Wallet } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, BarChart3, Handshake, LineChart, Wallet } from "lucide-react";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
 import { LoanAlerts } from "@/components/dashboard/LoanAlerts";
 import { NetWorthChart } from "@/components/dashboard/NetWorthChart";
+import { NetWorthTrend } from "@/components/dashboard/NetWorthTrend";
 import { RecentAssets } from "@/components/dashboard/RecentAssets";
 import { requireUser } from "@/lib/auth.server";
-import { formatCurrency } from "@/lib/currency.server";
+import { convertAmount, formatCurrency, getCachedRates } from "@/lib/currency.server";
 import { getDashboardData } from "@/lib/dashboard.server";
 import { getFamilyForUser, getFamilyMembers } from "@/lib/family.server";
+import { liveLoanState } from "@/lib/loan-interest";
 import { borrowerName, lenderName } from "@/lib/loan-party";
 
 export default async function DashboardPage() {
@@ -17,10 +19,10 @@ export default async function DashboardPage() {
 
   const members = await getFamilyMembers(family.id);
   const memberMap = Object.fromEntries(members.map((m) => [m.uid, m]));
-  const data = await getDashboardData(family.id, members, family.baseCurrency, user.uid);
-
-  const activeLoanTotal = data.activeLoans.reduce((sum, loan) => sum + loan.remainingAmount, 0);
-  const totalAssetCount = data.memberSummaries.reduce((sum, s) => sum + s.assetCount, 0);
+  const [data, rates] = await Promise.all([
+    getDashboardData(family.id, members, family.baseCurrency, user.uid),
+    getCachedRates(family.id),
+  ]);
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -31,28 +33,49 @@ export default async function DashboardPage() {
         </p>
         <div className="mt-5 flex flex-wrap gap-x-8 gap-y-2 text-sm">
           <span className="text-white/80">
-            <span className="text-white/55">Base currency</span> · {family.baseCurrency}
+            <span className="text-white/55">Assets</span> ·{" "}
+            {formatCurrency(data.assetsTotal, family.baseCurrency)}
           </span>
           <span className="text-white/80">
-            <span className="text-white/55">Members</span> · {members.length}
+            <span className="text-white/55">Owed to family</span> · +
+            {formatCurrency(data.receivablesTotal, family.baseCurrency)}
           </span>
           <span className="text-white/80">
-            <span className="text-white/55">Active loans</span> · {data.activeLoans.length}
+            <span className="text-white/55">Owed by family</span> · −
+            {formatCurrency(data.liabilitiesTotal, family.baseCurrency)}
           </span>
         </div>
       </section>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatTile icon={Wallet} label="Assets tracked" value={String(totalAssetCount)} />
         <StatTile
-          icon={Handshake}
-          label="Outstanding loans"
-          value={formatCurrency(activeLoanTotal, family.baseCurrency)}
+          icon={Wallet}
+          label="Assets"
+          value={formatCurrency(data.assetsTotal, family.baseCurrency)}
         />
-        <StatTile icon={Users} label="Family members" value={String(members.length)} />
+        <StatTile
+          icon={ArrowUpRight}
+          label="Owed to family"
+          value={formatCurrency(data.receivablesTotal, family.baseCurrency)}
+        />
+        <StatTile
+          icon={ArrowDownLeft}
+          label="Owed by family"
+          value={formatCurrency(data.liabilitiesTotal, family.baseCurrency)}
+        />
       </div>
 
       {data.overdueLoans.length > 0 && <LoanAlerts loans={data.overdueLoans} members={members} />}
+
+      <div className="card p-6">
+        <div className="flex items-center gap-3 mb-5">
+          <span className="icon-chip">
+            <LineChart className="w-5 h-5" aria-hidden="true" />
+          </span>
+          <h2 className="font-semibold text-foreground">Net worth over time</h2>
+        </div>
+        <NetWorthTrend snapshots={data.snapshots} currency={family.baseCurrency} />
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div className="card p-6">
@@ -83,13 +106,19 @@ export default async function DashboardPage() {
               <p className="text-muted text-sm">No outstanding loans.</p>
             ) : (
               data.activeLoans.slice(0, 5).map((loan) => {
+                const owed = convertAmount(
+                  liveLoanState(loan).totalOwed,
+                  loan.currency,
+                  family.baseCurrency,
+                  rates,
+                );
                 return (
                   <div key={loan.id} className="flex justify-between items-center text-sm">
-                    <span className="text-foreground/70">
+                    <span className="text-foreground/70 truncate">
                       {lenderName(loan, memberMap)} → {borrowerName(loan, memberMap)}
                     </span>
-                    <span className="font-semibold text-foreground">
-                      {formatCurrency(loan.remainingAmount, loan.currency)}
+                    <span className="font-semibold text-foreground tabular-nums shrink-0">
+                      {formatCurrency(owed, family.baseCurrency)}
                     </span>
                   </div>
                 );
