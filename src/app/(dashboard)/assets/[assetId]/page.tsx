@@ -32,7 +32,7 @@ export default async function AssetDetailPage({
   const converted = convertAmount(asset.amount, asset.currency, family.baseCurrency, rates);
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-semibold text-foreground">{asset.name}</h1>
