@@ -16,7 +16,7 @@ export function InviteCodePanel({ code }: { code: string }) {
   }
 
   return (
-    <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-center justify-between gap-4">
+    <div className="bg-accent-soft border border-line rounded-xl p-4 flex items-center justify-between gap-4">
       <div className="min-w-0">
         <p className="text-sm font-medium text-foreground">Family invite code</p>
         <p className="text-xs text-muted">

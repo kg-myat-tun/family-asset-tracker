@@ -16,9 +16,9 @@ interface Props {
 }
 
 const STATUS_STYLES = {
-  active: "bg-blue-50 text-blue-700",
-  partially_paid: "bg-yellow-50 text-yellow-700",
-  settled: "bg-green-50 text-green-700",
+  active: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
+  partially_paid: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400",
+  settled: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
 };
 
 export function LoanList({ loans, memberMap, currentUid, baseCurrency, rates, today }: Props) {
@@ -86,7 +86,7 @@ export function LoanList({ loans, memberMap, currentUid, baseCurrency, rates, to
                     {loan.status.replace("_", " ")}
                   </span>
                   {isOverdue && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-600 font-medium">
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/15 text-red-600 dark:text-red-400 font-medium">
                       overdue
                     </span>
                   )}

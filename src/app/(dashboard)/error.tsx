@@ -16,7 +16,7 @@ export default function DashboardError({
 
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center">
-      <span className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-50 text-red-600 mb-4">
+      <span className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-500/15 text-red-600 dark:text-red-400 mb-4">
         <TriangleAlert className="w-7 h-7" aria-hidden="true" />
       </span>
       <h2 className="text-lg font-semibold text-foreground mb-2">Something went wrong</h2>
