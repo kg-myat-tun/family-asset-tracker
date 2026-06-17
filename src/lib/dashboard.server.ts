@@ -74,6 +74,8 @@ export async function getDashboardData(
         remainingAmount: d.remainingAmount,
         interestRate: d.interestRate ?? null,
         compoundingPeriod: (d.compoundingPeriod ?? "none") as CompoundingPeriod,
+        installmentCount: d.installmentCount ?? null,
+        firstPaymentDate: d.firstPaymentDate ? d.firstPaymentDate.toDate() : null,
         interestStartDate: d.interestStartDate ? d.interestStartDate.toDate() : createdAt,
         principalOutstanding: d.principalOutstanding ?? d.remainingAmount,
         accruedInterestSnapshot: d.accruedInterestSnapshot ?? 0,

@@ -4,7 +4,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/firebase/admin";
 import { formatCurrency } from "@/lib/currency.server";
 import { getFamilyMembers } from "@/lib/family.server";
-import { liveLoanState } from "@/lib/loan-interest";
+import { hasSchedule, liveLoanState, nextInstallment } from "@/lib/loan-interest";
 import { borrowerName, lenderName } from "@/lib/loan-party";
 import { getLoans } from "@/lib/loans.server";
 import type { Loan, NotificationType } from "@/types";
@@ -18,32 +18,51 @@ function startOfDay(d: Date): number {
 }
 
 /**
- * Classify a loan against today. Returns the reminder type, or null when the
- * loan is settled, has no due date, or is not yet within the reminder window.
+ * Classify a due date against today. Returns the reminder type, or null when it
+ * is further out than the reminder window.
  */
-function classify(loan: Loan, now: Date): NotificationType | null {
-  if (loan.status === "settled" || !loan.dueDate) return null;
-  const daysUntil = Math.round((startOfDay(loan.dueDate) - startOfDay(now)) / MS_PER_DAY);
+function classify(dueDate: Date, now: Date): NotificationType | null {
+  const daysUntil = Math.round((startOfDay(dueDate) - startOfDay(now)) / MS_PER_DAY);
   if (daysUntil < 0) return "loan_overdue";
   if (daysUntil <= DUE_SOON_WINDOW_DAYS) return "loan_due_soon";
   return null;
 }
 
+/**
+ * The date that drives a loan's next reminder. For a loan with a repayment plan
+ * it's the next unpaid installment's due date (with its number); otherwise the
+ * loan's single due date. Returns null when there's nothing left to remind on.
+ */
+function reminderTarget(
+  loan: Loan,
+  now: Date,
+): { dueDate: Date; amount: number; installment: number | null } | null {
+  if (loan.status === "settled") return null;
+  if (hasSchedule(loan)) {
+    const next = nextInstallment(loan, now);
+    return next ? { dueDate: next.dueDate, amount: next.payment, installment: next.number } : null;
+  }
+  if (!loan.dueDate) return null;
+  return { dueDate: loan.dueDate, amount: liveLoanState(loan).totalOwed, installment: null };
+}
+
 function buildMessage(
   loan: Loan,
   type: NotificationType,
+  target: { dueDate: Date; amount: number; installment: number | null },
   recipientUid: string,
   memberMap: Record<string, { displayName: string }>,
 ): { title: string; body: string } {
-  const owed = formatCurrency(liveLoanState(loan).totalOwed, loan.currency);
+  const amount = formatCurrency(target.amount, loan.currency);
   const isLender = loan.lenderId === recipientUid;
-  const stake = isLender
-    ? `${borrowerName(loan, memberMap)} owes you ${owed}`
-    : `You owe ${owed} to ${lenderName(loan, memberMap)}`;
+  const what = target.installment
+    ? `installment #${target.installment} of ${amount}`
+    : amount;
+  const stake = isLender ? `${borrowerName(loan, memberMap)} owes you ${what}` : `you owe ${what}`;
   const when =
     type === "loan_overdue"
-      ? `was due ${loan.dueDate?.toLocaleDateString()}`
-      : `is due ${loan.dueDate?.toLocaleDateString()}`;
+      ? `was due ${target.dueDate.toLocaleDateString()}`
+      : `is due ${target.dueDate.toLocaleDateString()}`;
   return {
     title: type === "loan_overdue" ? "Payment overdue" : "Payment due soon",
     body: `${loan.description}: ${stake} — ${when}`,
@@ -78,23 +97,26 @@ export async function generateReminders(now: Date = new Date()): Promise<{ creat
 
     const candidates: Candidate[] = [];
     for (const loan of loans) {
-      const type = classify(loan, now);
-      if (!type || !loan.dueDate) continue;
+      const target = reminderTarget(loan, now);
+      if (!target) continue;
+      const type = classify(target.dueDate, now);
+      if (!type) continue;
 
       // Notify each participant who is a family member (external parties have no uid).
       const recipients = [loan.lenderId, loan.borrowerId].filter(
         (uid): uid is string => !!uid && !!memberMap[uid],
       );
       for (const recipientUid of recipients) {
-        const { title, body } = buildMessage(loan, type, recipientUid, memberMap);
+        const { title, body } = buildMessage(loan, type, target, recipientUid, memberMap);
         candidates.push({
-          id: `${recipientUid}_${loan.id}_${type}_${loan.dueDate.getTime()}`,
+          // Installment number keeps each scheduled payment's reminder distinct.
+          id: `${recipientUid}_${loan.id}_${type}_${target.installment ?? 0}_${target.dueDate.getTime()}`,
           recipientUid,
           loanId: loan.id,
           type,
           title,
           body,
-          dueDate: loan.dueDate,
+          dueDate: target.dueDate,
         });
       }
     }

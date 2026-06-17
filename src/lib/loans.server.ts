@@ -25,6 +25,8 @@ function docToLoan(doc: FirebaseFirestore.DocumentSnapshot): Loan {
     remainingAmount: d.remainingAmount,
     interestRate: d.interestRate ?? null,
     compoundingPeriod: (d.compoundingPeriod ?? "none") as CompoundingPeriod,
+    installmentCount: d.installmentCount ?? null,
+    firstPaymentDate: d.firstPaymentDate ? d.firstPaymentDate.toDate() : null,
     interestStartDate: d.interestStartDate ? d.interestStartDate.toDate() : createdAt,
     principalOutstanding: d.principalOutstanding ?? d.remainingAmount,
     accruedInterestSnapshot: d.accruedInterestSnapshot ?? 0,
@@ -89,6 +91,8 @@ export async function createLoan(
     principalAmount: number;
     interestRate?: number;
     compoundingPeriod?: CompoundingPeriod;
+    installmentCount?: number;
+    firstPaymentDate?: Date;
     description: string;
     dueDate?: Date;
   },
@@ -108,6 +112,8 @@ export async function createLoan(
     principalOutstanding: data.principalAmount,
     accruedInterestSnapshot: 0,
     compoundingPeriod,
+    installmentCount: data.installmentCount ?? null,
+    firstPaymentDate: data.firstPaymentDate ?? null,
     interestStartDate: now,
     lastEventDate: now,
     status: "active" as LoanStatus,
@@ -128,6 +134,8 @@ export async function updateLoan(
     dueDate: Date | null;
     interestRate: number | null;
     compoundingPeriod: CompoundingPeriod;
+    installmentCount: number | null;
+    firstPaymentDate: Date | null;
     // Only honoured when the loan has no repayments yet (enforced by caller).
     principalAmount?: number;
     currency?: string;
@@ -146,6 +154,8 @@ export async function updateLoan(
       dueDate: data.dueDate ?? null,
       interestRate: data.interestRate,
       compoundingPeriod: data.compoundingPeriod,
+      installmentCount: data.installmentCount,
+      firstPaymentDate: data.firstPaymentDate,
       updatedAt: FieldValue.serverTimestamp(),
     };
 

@@ -59,6 +59,10 @@ export interface Loan {
   remainingAmount: number;
   interestRate: number | null;
   compoundingPeriod: CompoundingPeriod;
+  // Optional monthly repayment plan (EMI). When set, the loan amortises over
+  // this many equal monthly installments starting on firstPaymentDate.
+  installmentCount: number | null;
+  firstPaymentDate: Date | null;
   // Interest accrues from this date. Defaults to createdAt for new loans.
   interestStartDate: Date;
   // Snapshot of the balance at lastEventDate, so reads can accrue forward in

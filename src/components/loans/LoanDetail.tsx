@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { VisibilityBadge } from "@/components/ui/VisibilityBadge";
 import { convertAmount, formatCurrency } from "@/lib/currency.server";
-import { liveLoanState } from "@/lib/loan-interest";
+import { buildSchedule, hasSchedule, liveLoanState, nextInstallment } from "@/lib/loan-interest";
 import { borrowerName, isExternalParty, lenderName } from "@/lib/loan-party";
 import type { FamilyMember, Loan, Repayment } from "@/types";
 import { DeleteLoanButton } from "./DeleteLoanButton";
@@ -32,6 +32,8 @@ export function LoanDetail({
   const principalRepaid = loan.principalAmount - principalOutstanding;
   const progressPct = (principalRepaid / loan.principalAmount) * 100;
   const hasInterest = loan.compoundingPeriod !== "none" && (loan.interestRate ?? 0) > 0;
+  const schedule = hasSchedule(loan) ? buildSchedule(loan) : [];
+  const next = nextInstallment(loan);
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -139,10 +141,75 @@ export function LoanDetail({
             </span>
           )}
         </p>
+
+        {next && loan.status !== "settled" && (
+          <p
+            className={`text-sm border-t border-line pt-4 ${
+              next.status === "overdue" ? "text-red-600 dark:text-red-400" : "text-muted"
+            }`}
+          >
+            {next.status === "overdue" ? "Installment overdue" : "Next payment"}:{" "}
+            <span className="font-semibold text-foreground">
+              {formatCurrency(next.payment, loan.currency)}
+            </span>{" "}
+            due {next.dueDate.toLocaleDateString()} (#{next.number} of {loan.installmentCount})
+          </p>
+        )}
       </div>
 
       {canAct && loan.status !== "settled" && (
         <RepaymentForm loanId={loan.id} loanCurrency={loan.currency} />
+      )}
+
+      {schedule.length > 0 && (
+        <details className="bg-card rounded-xl border border-line p-4">
+          <summary className="text-sm font-medium text-foreground cursor-pointer">
+            Repayment schedule ({loan.installmentCount} monthly installments)
+          </summary>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-muted border-b border-line">
+                  <th className="py-1.5 pr-3 font-medium">#</th>
+                  <th className="py-1.5 pr-3 font-medium">Due</th>
+                  <th className="py-1.5 pr-3 font-medium text-right">Payment</th>
+                  <th className="py-1.5 pr-3 font-medium text-right">Principal</th>
+                  <th className="py-1.5 pr-3 font-medium text-right">Interest</th>
+                  <th className="py-1.5 font-medium text-right">Balance</th>
+                </tr>
+              </thead>
+              <tbody>
+                {schedule.map((row) => (
+                  <tr
+                    key={row.number}
+                    className={`border-b border-line/60 last:border-0 ${
+                      row.status === "paid"
+                        ? "text-muted line-through"
+                        : row.status === "overdue"
+                          ? "text-red-600 dark:text-red-400"
+                          : "text-foreground"
+                    }`}
+                  >
+                    <td className="py-1.5 pr-3 tabular-nums">{row.number}</td>
+                    <td className="py-1.5 pr-3 tabular-nums">{row.dueDate.toLocaleDateString()}</td>
+                    <td className="py-1.5 pr-3 text-right tabular-nums">
+                      {formatCurrency(row.payment, loan.currency)}
+                    </td>
+                    <td className="py-1.5 pr-3 text-right tabular-nums">
+                      {formatCurrency(row.principal, loan.currency)}
+                    </td>
+                    <td className="py-1.5 pr-3 text-right tabular-nums">
+                      {formatCurrency(row.interest, loan.currency)}
+                    </td>
+                    <td className="py-1.5 text-right tabular-nums">
+                      {formatCurrency(row.balance, loan.currency)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
       )}
 
       {repayments.length > 0 && (

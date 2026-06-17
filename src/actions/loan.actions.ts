@@ -49,6 +49,11 @@ const CreateLoanSchema = z
     principalAmount: z.coerce.number().positive("Amount must be positive"),
     interestRate: z.coerce.number().min(0).max(100).optional(),
     compoundingPeriod: z.enum(["none", "monthly", "annually"]).default("none"),
+    installmentCount: z.coerce.number().int().min(1).max(600).optional(),
+    firstPaymentDate: z
+      .string()
+      .optional()
+      .transform((v) => (v ? new Date(v) : undefined)),
     description: z.string().min(1, "Description is required").max(300),
     dueDate: z
       .string()
@@ -80,9 +85,10 @@ export async function createLoanAction(
   const { user, family } = await getContextOrThrow();
 
   const raw = Object.fromEntries(formData);
-  // interestRate and dueDate are optional — drop empty strings before parsing
-  if (raw.interestRate === "") delete (raw as Record<string, unknown>).interestRate;
-  if (raw.dueDate === "") delete (raw as Record<string, unknown>).dueDate;
+  // Optional fields — drop empty strings before parsing.
+  for (const key of ["interestRate", "dueDate", "installmentCount", "firstPaymentDate"]) {
+    if (raw[key] === "") delete (raw as Record<string, unknown>)[key];
+  }
 
   const parsed = CreateLoanSchema.safeParse(raw);
   if (!parsed.success) return { errors: parsed.error.flatten().fieldErrors };
@@ -121,6 +127,8 @@ export async function createLoanAction(
     principalAmount: parsed.data.principalAmount,
     interestRate: parsed.data.interestRate,
     compoundingPeriod: parsed.data.compoundingPeriod,
+    installmentCount: parsed.data.installmentCount,
+    firstPaymentDate: parsed.data.firstPaymentDate,
     description: parsed.data.description,
     dueDate: parsed.data.dueDate,
   });
@@ -146,6 +154,11 @@ const UpdateLoanSchema = z.object({
   description: z.string().min(1, "Description is required").max(300),
   interestRate: z.coerce.number().min(0).max(100).optional(),
   compoundingPeriod: z.enum(["none", "monthly", "annually"]).default("none"),
+  installmentCount: z.coerce.number().int().min(1).max(600).optional(),
+  firstPaymentDate: z
+    .string()
+    .optional()
+    .transform((v) => (v ? new Date(v) : undefined)),
   dueDate: z
     .string()
     .optional()
@@ -166,9 +179,15 @@ export async function updateLoanAction(
   await assertCanMutateLoan(family.id, loan, user.uid);
 
   const raw = Object.fromEntries(formData);
-  if (raw.interestRate === "") delete (raw as Record<string, unknown>).interestRate;
-  if (raw.dueDate === "") delete (raw as Record<string, unknown>).dueDate;
-  if (raw.principalAmount === "") delete (raw as Record<string, unknown>).principalAmount;
+  for (const key of [
+    "interestRate",
+    "dueDate",
+    "principalAmount",
+    "installmentCount",
+    "firstPaymentDate",
+  ]) {
+    if (raw[key] === "") delete (raw as Record<string, unknown>)[key];
+  }
 
   const parsed = UpdateLoanSchema.safeParse(raw);
   if (!parsed.success) return { errors: parsed.error.flatten().fieldErrors };
@@ -186,6 +205,8 @@ export async function updateLoanAction(
     dueDate: parsed.data.dueDate ?? null,
     interestRate: parsed.data.interestRate ?? null,
     compoundingPeriod,
+    installmentCount: parsed.data.installmentCount ?? null,
+    firstPaymentDate: parsed.data.firstPaymentDate ?? null,
     principalAmount: editableAmount ? parsed.data.principalAmount : undefined,
     currency: editableAmount ? parsed.data.currency : undefined,
   });

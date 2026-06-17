@@ -1,3 +1,4 @@
+import { addMonths } from "date-fns";
 import type { CompoundingPeriod, Loan } from "@/types";
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
@@ -65,4 +66,92 @@ export function liveLoanState(loan: Loan, asOf: Date = new Date()): LoanState {
     accruedInterest,
     totalOwed: loan.principalOutstanding + accruedInterest,
   };
+}
+
+export type InstallmentStatus = "paid" | "due" | "overdue" | "upcoming";
+
+export interface Installment {
+  number: number;
+  dueDate: Date;
+  payment: number;
+  principal: number;
+  interest: number;
+  // Outstanding principal after this installment.
+  balance: number;
+  status: InstallmentStatus;
+}
+
+export function hasSchedule(loan: Loan): boolean {
+  return !!loan.installmentCount && loan.installmentCount > 0 && !!loan.firstPaymentDate;
+}
+
+/**
+ * Amortise the loan into equal monthly installments. Uses the standard EMI
+ * formula when interest applies, or an equal-principal split when it doesn't.
+ * Installment status is derived from how much principal has actually been
+ * repaid (principalAmount − principalOutstanding) and today's date — so paying
+ * ahead or behind the plan is reflected without storing per-installment state.
+ */
+export function buildSchedule(loan: Loan, asOf: Date = new Date()): Installment[] {
+  if (!hasSchedule(loan) || !loan.firstPaymentDate || !loan.installmentCount) return [];
+
+  const n = loan.installmentCount;
+  const principal = loan.principalAmount;
+  const monthlyRate =
+    loan.compoundingPeriod === "none" || !loan.interestRate ? 0 : loan.interestRate / 100 / 12;
+
+  const emi =
+    monthlyRate === 0
+      ? principal / n
+      : (principal * monthlyRate * (1 + monthlyRate) ** n) / ((1 + monthlyRate) ** n - 1);
+
+  const principalRepaid = loan.principalAmount - loan.principalOutstanding;
+  const today = asOf.getTime();
+
+  const rows: Installment[] = [];
+  let balance = principal;
+  let cumulativePrincipal = 0;
+  let nextAssigned = false;
+
+  for (let i = 1; i <= n; i++) {
+    const interest = monthlyRate === 0 ? 0 : balance * monthlyRate;
+    // Absorb rounding drift into the final installment so the balance lands on 0.
+    const principalPart = i === n ? balance : emi - interest;
+    balance = Math.max(0, balance - principalPart);
+    cumulativePrincipal += principalPart;
+
+    const dueDate = addMonths(loan.firstPaymentDate, i - 1);
+    let status: InstallmentStatus;
+    if (principalRepaid + 0.005 >= cumulativePrincipal) {
+      status = "paid";
+    } else if (dueDate.getTime() < today) {
+      status = "overdue";
+    } else if (!nextAssigned) {
+      status = "due";
+      nextAssigned = true;
+    } else {
+      status = "upcoming";
+    }
+
+    rows.push({
+      number: i,
+      dueDate,
+      payment: principalPart + interest,
+      principal: principalPart,
+      interest,
+      balance,
+      status,
+    });
+  }
+
+  return rows;
+}
+
+/**
+ * The next installment a borrower still needs to cover: the first that is not
+ * yet paid (overdue ones take priority). Null when the plan is fully paid.
+ */
+export function nextInstallment(loan: Loan, asOf: Date = new Date()): Installment | null {
+  const schedule = buildSchedule(loan, asOf);
+  return schedule.find((r) => r.status !== "paid") ?? null;
 }

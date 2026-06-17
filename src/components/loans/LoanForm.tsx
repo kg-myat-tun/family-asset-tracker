@@ -205,9 +205,46 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
         </div>
       </div>
 
+      {/* Optional monthly repayment plan. Leave blank for a single due date. */}
+      <div className="flex gap-3">
+        <div className="flex-1">
+          <label
+            htmlFor="loan-installments"
+            className="block text-sm font-medium text-foreground/80 mb-1"
+          >
+            Monthly installments (optional)
+          </label>
+          <input
+            id="loan-installments"
+            name="installmentCount"
+            type="number"
+            step="1"
+            min="1"
+            max="600"
+            inputMode="numeric"
+            placeholder="e.g. 12"
+            className="w-full px-4 py-2 border border-line rounded-lg"
+          />
+        </div>
+        <div className="flex-1">
+          <label
+            htmlFor="loan-first-payment"
+            className="block text-sm font-medium text-foreground/80 mb-1"
+          >
+            First payment date
+          </label>
+          <input
+            id="loan-first-payment"
+            name="firstPaymentDate"
+            type="date"
+            className="w-full px-4 py-2 border border-line rounded-lg"
+          />
+        </div>
+      </div>
+
       <div>
         <label htmlFor="loan-due" className="block text-sm font-medium text-foreground/80 mb-1">
-          Due date (optional)
+          Due date (optional, for loans without a payment plan)
         </label>
         <input
           id="loan-due"
