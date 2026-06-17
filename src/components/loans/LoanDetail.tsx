@@ -36,7 +36,7 @@ export function LoanDetail({
   const next = nextInstallment(loan);
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6">
       <div className="bg-card rounded-xl border border-line p-6 space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3 flex-wrap">

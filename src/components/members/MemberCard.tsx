@@ -17,8 +17,8 @@ const ROLE_LABELS: Record<Role, string> = {
 };
 
 const ROLE_COLORS: Record<Role, string> = {
-  admin: "bg-purple-100 text-purple-700",
-  member: "bg-blue-100 text-blue-700",
+  admin: "bg-purple-500/15 text-purple-600 dark:text-purple-400",
+  member: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
   viewer: "bg-foreground/6 text-foreground/80",
 };
 

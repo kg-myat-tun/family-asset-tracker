@@ -9,7 +9,7 @@ export default async function ProfilePage() {
   if (!profile) return null;
 
   return (
-    <div className="max-w-xl space-y-6">
+    <div className="max-w-2xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-foreground">Your profile</h1>
         <p className="text-sm text-muted mt-1">Update how you appear to the rest of your family.</p>

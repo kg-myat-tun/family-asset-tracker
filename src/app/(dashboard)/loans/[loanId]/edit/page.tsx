@@ -29,7 +29,7 @@ export default async function EditLoanPage({ params }: { params: Promise<{ loanI
   const boundAction = updateLoanAction.bind(null, loan.id);
 
   return (
-    <div className="max-w-xl">
+    <div className="max-w-xl mx-auto">
       <h1 className="text-2xl font-semibold text-foreground mb-6">Edit loan</h1>
       <LoanEditForm
         action={boundAction}

@@ -23,7 +23,7 @@ export default async function EditAssetPage({ params }: { params: Promise<{ asse
   const boundAction = updateAssetAction.bind(null, asset.id);
 
   return (
-    <div className="max-w-xl">
+    <div className="max-w-xl mx-auto">
       <h1 className="text-2xl font-semibold text-foreground mb-6">Edit asset</h1>
       <AssetForm action={boundAction} defaultValues={asset} submitLabel="Save changes" />
     </div>

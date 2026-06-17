@@ -11,7 +11,7 @@ export default async function NewLoanPage() {
   const candidates = members.filter((m) => m.uid !== user.uid);
 
   return (
-    <div className="max-w-xl">
+    <div className="max-w-xl mx-auto">
       <h1 className="text-2xl font-semibold text-foreground mb-6">New loan</h1>
       <LoanForm candidates={candidates} defaultCurrency={family.baseCurrency} />
     </div>

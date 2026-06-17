@@ -31,7 +31,7 @@ export default async function AssetsPage({
   const count = filtered.length;
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight">Assets</h1>
