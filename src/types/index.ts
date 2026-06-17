@@ -92,3 +92,17 @@ export interface FxRates {
   rates: Record<string, number>;
   fetchedAt: Date;
 }
+
+export type NotificationType = "loan_due_soon" | "loan_overdue";
+
+export interface Notification {
+  id: string;
+  recipientUid: string;
+  loanId: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  dueDate: Date;
+  read: boolean;
+  createdAt: Date;
+}

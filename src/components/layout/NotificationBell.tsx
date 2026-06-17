@@ -1,0 +1,158 @@
+"use client";
+
+import { onAuthStateChanged } from "firebase/auth";
+import { collection, limit, onSnapshot, query, type Timestamp, where } from "firebase/firestore";
+import { Bell } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+import {
+  markAllNotificationsReadAction,
+  markNotificationReadAction,
+} from "@/actions/notification.actions";
+import { getClientAuth, getClientDb } from "@/firebase/client";
+
+interface Item {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  loanId: string;
+  read: boolean;
+  createdAt: Date;
+}
+
+export function NotificationBell({ familyId }: { familyId: string }) {
+  const [items, setItems] = useState<Item[]>([]);
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let unsubscribeSnapshot = () => {};
+
+    // Mirror the activity feed: wait for Auth to rehydrate before attaching the
+    // Firestore listener, otherwise the read is permission-denied.
+    const unsubscribeAuth = onAuthStateChanged(getClientAuth(), (user) => {
+      unsubscribeSnapshot();
+      if (!user) return;
+
+      // Equality filter only (no orderBy) so no composite index is required;
+      // sort newest-first on the client.
+      const q = query(
+        collection(getClientDb(), `families/${familyId}/notifications`),
+        where("recipientUid", "==", user.uid),
+        limit(50),
+      );
+
+      unsubscribeSnapshot = onSnapshot(
+        q,
+        (snap) => {
+          const rows = snap.docs.map((doc) => {
+            const d = doc.data();
+            return {
+              id: doc.id,
+              type: d.type,
+              title: d.title,
+              body: d.body,
+              loanId: d.loanId,
+              read: !!d.read,
+              createdAt: (d.createdAt as Timestamp | null)?.toDate() ?? new Date(),
+            };
+          });
+          rows.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+          setItems(rows.slice(0, 20));
+        },
+        (err) => console.error("NotificationBell snapshot error:", err),
+      );
+    });
+
+    return () => {
+      unsubscribeSnapshot();
+      unsubscribeAuth();
+    };
+  }, [familyId]);
+
+  // Close the dropdown on an outside click.
+  useEffect(() => {
+    if (!open) return;
+    function onClick(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [open]);
+
+  const unread = items.filter((i) => !i.read).length;
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-label={unread > 0 ? `Notifications (${unread} unread)` : "Notifications"}
+        className="relative p-2 -m-1 text-muted hover:text-foreground"
+      >
+        <Bell className="w-5 h-5" aria-hidden="true" />
+        {unread > 0 && (
+          <span className="absolute top-0.5 right-0.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-semibold tabular-nums">
+            {unread > 9 ? "9+" : unread}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <div className="absolute right-0 mt-2 w-80 max-w-[90vw] bg-card border border-line rounded-xl shadow-lg z-40 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-line">
+            <span className="text-sm font-semibold text-foreground">Notifications</span>
+            {unread > 0 && (
+              <button
+                type="button"
+                onClick={() => markAllNotificationsReadAction()}
+                className="text-xs text-accent hover:underline"
+              >
+                Mark all read
+              </button>
+            )}
+          </div>
+
+          {items.length === 0 ? (
+            <p className="px-4 py-6 text-sm text-muted text-center">You're all caught up.</p>
+          ) : (
+            <ul className="max-h-96 overflow-y-auto divide-y divide-line">
+              {items.map((item) => (
+                <li key={item.id}>
+                  <Link
+                    href={`/loans/${item.loanId}`}
+                    onClick={() => {
+                      if (!item.read) markNotificationReadAction(item.id);
+                      setOpen(false);
+                    }}
+                    className={`block px-4 py-3 hover:bg-foreground/5 ${
+                      item.read ? "" : "bg-accent-soft/40"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      {!item.read && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
+                      )}
+                      <p
+                        className={`text-sm ${item.type === "loan_overdue" ? "text-red-600 dark:text-red-400" : "text-foreground"} font-medium`}
+                      >
+                        {item.title}
+                      </p>
+                    </div>
+                    <p className="text-xs text-muted mt-0.5">{item.body}</p>
+                    <p className="text-[11px] text-muted/70 mt-1">
+                      {item.createdAt.toLocaleDateString()}
+                    </p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
