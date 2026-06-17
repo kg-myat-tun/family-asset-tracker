@@ -95,6 +95,9 @@ export async function createLoanAction(
 
   const { direction, counterpartyType, counterpartyId, currency, principalAmount } = parsed.data;
   const members = await getFamilyMembers(family.id);
+  if (members.find((m) => m.uid === user.uid)?.role === "viewer") {
+    return { errors: { _: ["Viewers cannot create loans"] } };
+  }
 
   // Resolve the counterparty (the non-you side) into an id (member) or name (external).
   let counterId: string | null = null;
@@ -250,6 +253,11 @@ export async function recordRepaymentAction(
 
   if (loan.lenderId !== user.uid && loan.borrowerId !== user.uid) {
     return { errors: { _: ["Not authorized"] } };
+  }
+
+  const members = await getFamilyMembers(family.id);
+  if (members.find((m) => m.uid === user.uid)?.role === "viewer") {
+    return { errors: { _: ["Viewers cannot record repayments"] } };
   }
 
   const parsed = RepaymentSchema.safeParse(Object.fromEntries(formData));

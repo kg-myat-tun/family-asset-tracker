@@ -1,6 +1,7 @@
 import { FieldValue } from "firebase-admin/firestore";
 import { NextResponse } from "next/server";
 import { getAdminDb } from "@/firebase/admin";
+import { recordNetWorthSnapshot } from "@/lib/networth.server";
 
 const FX_API = "https://api.frankfurter.app/latest?base=USD";
 
@@ -26,5 +27,24 @@ export async function GET(request: Request) {
   }
   await batch.commit();
 
-  return NextResponse.json({ ok: true, date: today, currencies: Object.keys(rates).length });
+  // Record a daily net-worth snapshot per family using the fresh rates.
+  let snapshots = 0;
+  await Promise.all(
+    familiesSnap.docs.map(async (familyDoc) => {
+      const baseCurrency = familyDoc.data().settings?.baseCurrency ?? "USD";
+      try {
+        await recordNetWorthSnapshot(familyDoc.id, baseCurrency, rates);
+        snapshots++;
+      } catch (err) {
+        console.error(`net-worth snapshot failed for family ${familyDoc.id}:`, err);
+      }
+    }),
+  );
+
+  return NextResponse.json({
+    ok: true,
+    date: today,
+    currencies: Object.keys(rates).length,
+    snapshots,
+  });
 }

@@ -97,6 +97,15 @@ export interface FxRates {
   fetchedAt: Date;
 }
 
+export interface NetWorthSnapshot {
+  // YYYY-MM-DD (also the document id), in the family's base currency.
+  date: string;
+  assetsTotal: number;
+  receivablesTotal: number;
+  liabilitiesTotal: number;
+  totalNetWorth: number;
+}
+
 export type NotificationType = "loan_due_soon" | "loan_overdue";
 
 export interface Notification {
