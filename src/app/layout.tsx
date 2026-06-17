@@ -1,11 +1,40 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { I18nProvider } from "@/components/i18n/I18nProvider";
 import { getServerI18n } from "@/lib/i18n/server";
+import { APP_NAME, APP_URL, BRAND, SEO } from "@/lib/seo";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "Family Asset Tracker",
-  description: "Track your family's assets and loans across currencies.",
+export async function generateMetadata(): Promise<Metadata> {
+  const { locale } = await getServerI18n();
+  const seo = SEO[locale];
+
+  return {
+    metadataBase: new URL(APP_URL),
+    applicationName: APP_NAME,
+    title: { default: seo.title, template: `%s · ${seo.title}` },
+    description: seo.description,
+    // Private, auth-gated app — keep every page out of search indexes.
+    robots: { index: false, follow: false, nocache: true },
+    appleWebApp: { capable: true, title: seo.title, statusBarStyle: "default" },
+    formatDetection: { telephone: false, email: false, address: false },
+    openGraph: {
+      type: "website",
+      siteName: APP_NAME,
+      title: seo.title,
+      description: seo.description,
+      locale: seo.ogLocale,
+      url: "/",
+    },
+    twitter: { card: "summary_large_image", title: seo.title, description: seo.description },
+  };
+}
+
+export const viewport: Viewport = {
+  colorScheme: "light dark",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: BRAND.backgroundLight },
+    { media: "(prefers-color-scheme: dark)", color: BRAND.backgroundDark },
+  ],
 };
 
 export default async function RootLayout({
