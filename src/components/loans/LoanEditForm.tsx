@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import type { LoanFormState } from "@/actions/loan.actions";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { VisibilityField } from "@/components/ui/VisibilityField";
 import { borrowerName, lenderName } from "@/lib/loan-party";
 import type { FamilyMember, Loan } from "@/types";
@@ -22,6 +23,7 @@ function toDateInput(d: Date | null): string {
 }
 
 export function LoanEditForm({ action, loan, memberMap, editableAmount }: Props) {
+  const { dict } = useI18n();
   const [state, formAction, pending] = useActionState<LoanFormState, FormData>(action, null);
 
   return (
@@ -29,11 +31,11 @@ export function LoanEditForm({ action, loan, memberMap, editableAmount }: Props)
       {/* Parties are fixed once a loan exists — delete and recreate to change them. */}
       <div className="flex gap-8 text-sm">
         <div>
-          <span className="block text-muted">Lender</span>
+          <span className="block text-muted">{dict.loans.lender}</span>
           <span className="font-medium">{lenderName(loan, memberMap)}</span>
         </div>
         <div>
-          <span className="block text-muted">Borrower</span>
+          <span className="block text-muted">{dict.loans.borrower}</span>
           <span className="font-medium">{borrowerName(loan, memberMap)}</span>
         </div>
       </div>
@@ -44,7 +46,7 @@ export function LoanEditForm({ action, loan, memberMap, editableAmount }: Props)
             htmlFor="loan-principal"
             className="block text-sm font-medium text-foreground/80 mb-1"
           >
-            Principal amount
+            {dict.loans.principalAmount}
           </label>
           <input
             id="loan-principal"
@@ -66,7 +68,7 @@ export function LoanEditForm({ action, loan, memberMap, editableAmount }: Props)
             htmlFor="loan-currency"
             className="block text-sm font-medium text-foreground/80 mb-1"
           >
-            Currency
+            {dict.loans.currency}
           </label>
           <select
             id="loan-currency"
@@ -84,9 +86,7 @@ export function LoanEditForm({ action, loan, memberMap, editableAmount }: Props)
         </div>
       </div>
       {!editableAmount && (
-        <p className="-mt-3 text-xs text-muted">
-          Principal and currency are locked once a repayment exists.
-        </p>
+        <p className="-mt-3 text-xs text-muted">{dict.loans.lockedNote}</p>
       )}
 
       <div className="flex gap-3">
@@ -95,7 +95,7 @@ export function LoanEditForm({ action, loan, memberMap, editableAmount }: Props)
             htmlFor="loan-interest"
             className="block text-sm font-medium text-foreground/80 mb-1"
           >
-            Interest rate % / yr (optional)
+            {dict.loans.interestRate}
           </label>
           <input
             id="loan-interest"
@@ -114,7 +114,7 @@ export function LoanEditForm({ action, loan, memberMap, editableAmount }: Props)
             htmlFor="loan-compounding"
             className="block text-sm font-medium text-foreground/80 mb-1"
           >
-            Compounds
+            {dict.loans.compounds}
           </label>
           <select
             id="loan-compounding"
@@ -122,9 +122,9 @@ export function LoanEditForm({ action, loan, memberMap, editableAmount }: Props)
             defaultValue={loan.compoundingPeriod}
             className="w-full px-4 py-2 border border-line rounded-lg"
           >
-            <option value="none">No interest</option>
-            <option value="monthly">Monthly</option>
-            <option value="annually">Annually</option>
+            <option value="none">{dict.loans.compNone}</option>
+            <option value="monthly">{dict.loans.compMonthly}</option>
+            <option value="annually">{dict.loans.compAnnually}</option>
           </select>
         </div>
       </div>
@@ -136,7 +136,7 @@ export function LoanEditForm({ action, loan, memberMap, editableAmount }: Props)
             htmlFor="loan-installments"
             className="block text-sm font-medium text-foreground/80 mb-1"
           >
-            Monthly installments (optional)
+            {dict.loans.installments}
           </label>
           <input
             id="loan-installments"
@@ -146,7 +146,7 @@ export function LoanEditForm({ action, loan, memberMap, editableAmount }: Props)
             min="1"
             max="600"
             inputMode="numeric"
-            placeholder="e.g. 12"
+            placeholder="12"
             defaultValue={loan.installmentCount ?? ""}
             className="w-full px-4 py-2 border border-line rounded-lg"
           />
@@ -156,7 +156,7 @@ export function LoanEditForm({ action, loan, memberMap, editableAmount }: Props)
             htmlFor="loan-first-payment"
             className="block text-sm font-medium text-foreground/80 mb-1"
           >
-            First payment date
+            {dict.loans.firstPaymentDate}
           </label>
           <input
             id="loan-first-payment"
@@ -170,7 +170,7 @@ export function LoanEditForm({ action, loan, memberMap, editableAmount }: Props)
 
       <div>
         <label htmlFor="loan-due" className="block text-sm font-medium text-foreground/80 mb-1">
-          Due date (optional, for loans without a payment plan)
+          {dict.loans.dueDateOnly}
         </label>
         <input
           id="loan-due"
@@ -186,7 +186,7 @@ export function LoanEditForm({ action, loan, memberMap, editableAmount }: Props)
           htmlFor="loan-description"
           className="block text-sm font-medium text-foreground/80 mb-1"
         >
-          Description
+          {dict.loans.description}
         </label>
         <textarea
           id="loan-description"
@@ -210,7 +210,7 @@ export function LoanEditForm({ action, loan, memberMap, editableAmount }: Props)
         disabled={pending}
         className="w-full py-2 px-4 bg-accent text-white rounded-lg hover:bg-accent-strong disabled:opacity-50"
       >
-        {pending ? "Saving..." : "Save changes"}
+        {pending ? dict.common.saving : dict.common.saveChanges}
       </button>
     </form>
   );

@@ -4,6 +4,7 @@ import { AssetForm } from "@/components/assets/AssetForm";
 import { getAsset } from "@/lib/assets.server";
 import { requireUser } from "@/lib/auth.server";
 import { getFamilyForUser, getFamilyMembers } from "@/lib/family.server";
+import { getServerI18n } from "@/lib/i18n/server";
 import { canViewAsset } from "@/lib/visibility";
 
 export default async function EditAssetPage({ params }: { params: Promise<{ assetId: string }> }) {
@@ -21,11 +22,16 @@ export default async function EditAssetPage({ params }: { params: Promise<{ asse
   if (!canMutate) redirect(`/assets/${asset.id}`);
 
   const boundAction = updateAssetAction.bind(null, asset.id);
+  const { dict } = await getServerI18n();
 
   return (
     <div className="max-w-xl mx-auto">
-      <h1 className="text-2xl font-semibold text-foreground mb-6">Edit asset</h1>
-      <AssetForm action={boundAction} defaultValues={asset} submitLabel="Save changes" />
+      <h1 className="text-2xl font-semibold text-foreground mb-6">{dict.assets.editTitle}</h1>
+      <AssetForm
+        action={boundAction}
+        defaultValues={asset}
+        submitLabel={dict.common.saveChanges}
+      />
     </div>
   );
 }

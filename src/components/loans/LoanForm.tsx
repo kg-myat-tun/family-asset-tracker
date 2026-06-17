@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { createLoanAction, type LoanFormState } from "@/actions/loan.actions";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { VisibilityField } from "@/components/ui/VisibilityField";
 import type { FamilyMember } from "@/types";
 
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export function LoanForm({ candidates, defaultCurrency }: Props) {
+  const { dict } = useI18n();
   const [state, formAction, pending] = useActionState<LoanFormState, FormData>(
     createLoanAction,
     null,
@@ -25,7 +27,7 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
     candidates.length > 0 ? "member" : "external",
   );
 
-  const counterpartyLabel = direction === "lent" ? "Borrower" : "Lender";
+  const counterpartyLabel = direction === "lent" ? dict.loans.borrower : dict.loans.lender;
 
   return (
     <form action={formAction} className="space-y-5">
@@ -34,12 +36,14 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
 
       {/* Direction */}
       <div>
-        <span className="block text-sm font-medium text-foreground/80 mb-1.5">Type</span>
+        <span className="block text-sm font-medium text-foreground/80 mb-1.5">
+          {dict.loans.type}
+        </span>
         <div className="flex gap-1 bg-foreground/6 rounded-lg p-1">
           {(
             [
-              ["lent", "I lent money"],
-              ["borrowed", "I borrowed money"],
+              ["lent", dict.loans.iLent],
+              ["borrowed", dict.loans.iBorrowed],
             ] as const
           ).map(([value, label]) => (
             <button
@@ -65,8 +69,8 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
           <div className="flex gap-1 bg-foreground/6 rounded-lg p-0.5 text-xs">
             {(
               [
-                ["member", "Family member"],
-                ["external", "External"],
+                ["member", dict.loans.familyMember],
+                ["external", dict.loans.externalOption],
               ] as const
             ).map(([value, label]) => (
               <button
@@ -95,7 +99,7 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
             className="w-full px-4 py-2 border border-line rounded-lg"
           >
             <option value="" disabled>
-              Select a family member
+              {dict.loans.selectMember}
             </option>
             {candidates.map((m) => (
               <option key={m.uid} value={m.uid}>
@@ -110,7 +114,7 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
             type="text"
             required
             maxLength={120}
-            placeholder="e.g. John Smith, Bank of Example"
+            placeholder={dict.loans.externalNamePlaceholder}
             className="w-full px-4 py-2 border border-line rounded-lg"
           />
         )}
@@ -128,7 +132,7 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
             htmlFor="loan-principal"
             className="block text-sm font-medium text-foreground/80 mb-1"
           >
-            Principal amount
+            {dict.loans.principalAmount}
           </label>
           <input
             id="loan-principal"
@@ -149,7 +153,7 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
             htmlFor="loan-currency"
             className="block text-sm font-medium text-foreground/80 mb-1"
           >
-            Currency
+            {dict.loans.currency}
           </label>
           <select
             id="loan-currency"
@@ -172,7 +176,7 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
             htmlFor="loan-interest"
             className="block text-sm font-medium text-foreground/80 mb-1"
           >
-            Interest rate % / yr (optional)
+            {dict.loans.interestRate}
           </label>
           <input
             id="loan-interest"
@@ -190,7 +194,7 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
             htmlFor="loan-compounding"
             className="block text-sm font-medium text-foreground/80 mb-1"
           >
-            Compounds
+            {dict.loans.compounds}
           </label>
           <select
             id="loan-compounding"
@@ -198,9 +202,9 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
             defaultValue="monthly"
             className="w-full px-4 py-2 border border-line rounded-lg"
           >
-            <option value="none">No interest</option>
-            <option value="monthly">Monthly</option>
-            <option value="annually">Annually</option>
+            <option value="none">{dict.loans.compNone}</option>
+            <option value="monthly">{dict.loans.compMonthly}</option>
+            <option value="annually">{dict.loans.compAnnually}</option>
           </select>
         </div>
       </div>
@@ -212,7 +216,7 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
             htmlFor="loan-installments"
             className="block text-sm font-medium text-foreground/80 mb-1"
           >
-            Monthly installments (optional)
+            {dict.loans.installments}
           </label>
           <input
             id="loan-installments"
@@ -222,7 +226,7 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
             min="1"
             max="600"
             inputMode="numeric"
-            placeholder="e.g. 12"
+            placeholder="12"
             className="w-full px-4 py-2 border border-line rounded-lg"
           />
         </div>
@@ -231,7 +235,7 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
             htmlFor="loan-first-payment"
             className="block text-sm font-medium text-foreground/80 mb-1"
           >
-            First payment date
+            {dict.loans.firstPaymentDate}
           </label>
           <input
             id="loan-first-payment"
@@ -244,7 +248,7 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
 
       <div>
         <label htmlFor="loan-due" className="block text-sm font-medium text-foreground/80 mb-1">
-          Due date (optional, for loans without a payment plan)
+          {dict.loans.dueDateOnly}
         </label>
         <input
           id="loan-due"
@@ -259,7 +263,7 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
           htmlFor="loan-description"
           className="block text-sm font-medium text-foreground/80 mb-1"
         >
-          Description
+          {dict.loans.description}
         </label>
         <textarea
           id="loan-description"
@@ -280,7 +284,7 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
         disabled={pending}
         className="w-full py-2 px-4 bg-accent text-white rounded-lg hover:bg-accent-strong disabled:opacity-50"
       >
-        {pending ? "Saving..." : "Create loan"}
+        {pending ? dict.common.saving : dict.loans.createLoan}
       </button>
     </form>
   );

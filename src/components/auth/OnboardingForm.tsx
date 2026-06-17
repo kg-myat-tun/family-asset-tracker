@@ -2,12 +2,15 @@
 
 import { useActionState, useState } from "react";
 import { createFamilyAction, joinFamilyAction } from "@/actions/family.actions";
+import { useI18n } from "@/components/i18n/I18nProvider";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 
 const COMMON_CURRENCIES = ["USD", "EUR", "GBP", "THB", "JPY", "SGD", "AUD", "CAD"];
 
 type Mode = "create" | "join";
 
 export function OnboardingForm() {
+  const { dict } = useI18n();
   const [mode, setMode] = useState<Mode>("create");
 
   return (
@@ -24,29 +27,29 @@ export function OnboardingForm() {
                 : "text-muted hover:text-foreground/80"
             }`}
           >
-            {m === "create" ? "Create a family" : "Join a family"}
+            {m === "create" ? dict.auth.createTab : dict.auth.joinTab}
           </button>
         ))}
       </div>
 
-      {mode === "create" ? <CreateFamilyForm /> : <JoinFamilyForm />}
+      {mode === "create" ? <CreateFamilyForm dict={dict} /> : <JoinFamilyForm dict={dict} />}
     </div>
   );
 }
 
-function CreateFamilyForm() {
+function CreateFamilyForm({ dict }: { dict: Dictionary }) {
   const [state, action, pending] = useActionState(createFamilyAction, null);
 
   return (
     <form action={action} className="space-y-4">
       <div>
         <label htmlFor="family-name" className="block text-sm font-medium text-foreground/80 mb-1">
-          Family name
+          {dict.auth.familyName}
         </label>
         <input
           id="family-name"
           name="name"
-          placeholder="e.g. The Smiths"
+          placeholder={dict.auth.familyNamePlaceholder}
           required
           className="w-full px-4 py-2 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-soft"
         />
@@ -58,7 +61,7 @@ function CreateFamilyForm() {
           htmlFor="base-currency"
           className="block text-sm font-medium text-foreground/80 mb-1"
         >
-          Base currency
+          {dict.auth.baseCurrency}
         </label>
         <select
           id="base-currency"
@@ -83,20 +86,20 @@ function CreateFamilyForm() {
         disabled={pending}
         className="w-full py-2 px-4 bg-accent text-white rounded-lg hover:bg-accent-strong disabled:opacity-50"
       >
-        {pending ? "Creating..." : "Create family"}
+        {pending ? dict.auth.creating : dict.auth.createFamily}
       </button>
     </form>
   );
 }
 
-function JoinFamilyForm() {
+function JoinFamilyForm({ dict }: { dict: Dictionary }) {
   const [state, action, pending] = useActionState(joinFamilyAction, null);
 
   return (
     <form action={action} className="space-y-4">
       <div>
         <label htmlFor="invite-code" className="block text-sm font-medium text-foreground/80 mb-1">
-          Invite code
+          {dict.auth.inviteCode}
         </label>
         <input
           id="invite-code"
@@ -111,9 +114,7 @@ function JoinFamilyForm() {
         {state?.error?.inviteCode && (
           <p className="text-sm text-red-500 mt-1">{state.error.inviteCode[0]}</p>
         )}
-        <p className="text-xs text-muted mt-1">
-          Ask a family admin for the 6-character code on their Members page.
-        </p>
+        <p className="text-xs text-muted mt-1">{dict.auth.inviteCodeHint}</p>
       </div>
 
       <button
@@ -121,7 +122,7 @@ function JoinFamilyForm() {
         disabled={pending}
         className="w-full py-2 px-4 bg-accent text-white rounded-lg hover:bg-accent-strong disabled:opacity-50"
       >
-        {pending ? "Joining..." : "Join family"}
+        {pending ? dict.auth.joining : dict.auth.joinFamily}
       </button>
     </form>
   );

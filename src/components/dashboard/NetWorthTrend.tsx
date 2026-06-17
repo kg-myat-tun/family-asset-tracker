@@ -1,6 +1,7 @@
 "use client";
 
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import type { NetWorthSnapshot } from "@/types";
 
 interface Props {
@@ -9,13 +10,10 @@ interface Props {
 }
 
 export function NetWorthTrend({ snapshots, currency }: Props) {
+  const { dict } = useI18n();
+
   if (snapshots.length < 2) {
-    return (
-      <p className="text-muted text-sm">
-        Not enough history yet — a snapshot is recorded daily, so the trend will fill in over the
-        coming days.
-      </p>
-    );
+    return <p className="text-muted text-sm">{dict.dashboard.trendEmpty}</p>;
   }
 
   const data = snapshots.map((s) => ({

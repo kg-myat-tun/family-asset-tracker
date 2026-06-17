@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { changeRoleAction, removeMemberAction } from "@/actions/member.actions";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import type { FamilyMember, Role } from "@/types";
 
 interface Props {
@@ -10,12 +11,6 @@ interface Props {
   isSelf: boolean;
 }
 
-const ROLE_LABELS: Record<Role, string> = {
-  admin: "Admin",
-  member: "Member",
-  viewer: "Viewer",
-};
-
 const ROLE_COLORS: Record<Role, string> = {
   admin: "bg-purple-500/15 text-purple-600 dark:text-purple-400",
   member: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
@@ -23,6 +18,13 @@ const ROLE_COLORS: Record<Role, string> = {
 };
 
 export function MemberCard({ member, isAdmin, isSelf }: Props) {
+  const { dict } = useI18n();
+  const roleLabels: Record<Role, string> = {
+    admin: dict.members.roleAdmin,
+    member: dict.members.roleMember,
+    viewer: dict.members.roleViewer,
+  };
+
   return (
     <div className="card p-4 flex items-center gap-4">
       <div className="w-11 h-11 rounded-full bg-accent-soft text-accent-strong overflow-hidden shrink-0">
@@ -38,14 +40,16 @@ export function MemberCard({ member, isAdmin, isSelf }: Props) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <p className="font-semibold text-foreground truncate">{member.displayName}</p>
-          {isSelf && <span className="text-xs text-muted">(you)</span>}
+          {isSelf && <span className="text-xs text-muted">{dict.members.you}</span>}
         </div>
         <p className="text-sm text-muted truncate">{member.email}</p>
-        <p className="text-xs text-muted">{member.assetCount} assets</p>
+        <p className="text-xs text-muted">
+          {member.assetCount} {dict.members.assetsCount}
+        </p>
       </div>
 
       <span className={`text-xs px-2 py-1 rounded-full font-medium ${ROLE_COLORS[member.role]}`}>
-        {ROLE_LABELS[member.role]}
+        {roleLabels[member.role]}
       </span>
 
       {isAdmin && !isSelf && (
@@ -62,9 +66,9 @@ export function MemberCard({ member, isAdmin, isSelf }: Props) {
               className="text-sm border border-line rounded-lg px-2 py-1"
               aria-label={`Role for ${member.displayName}`}
             >
-              <option value="admin">Admin</option>
-              <option value="member">Member</option>
-              <option value="viewer">Viewer</option>
+              <option value="admin">{dict.members.roleAdmin}</option>
+              <option value="member">{dict.members.roleMember}</option>
+              <option value="viewer">{dict.members.roleViewer}</option>
             </select>
           </form>
 
@@ -74,10 +78,12 @@ export function MemberCard({ member, isAdmin, isSelf }: Props) {
               type="submit"
               className="text-sm text-red-500 hover:text-red-700 px-2 py-1"
               onClick={(e) => {
-                if (!confirm(`Remove ${member.displayName}?`)) e.preventDefault();
+                if (!confirm(`${member.displayName} — ${dict.members.removeConfirm}`)) {
+                  e.preventDefault();
+                }
               }}
             >
-              Remove
+              {dict.members.remove}
             </button>
           </form>
         </div>

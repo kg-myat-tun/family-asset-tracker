@@ -4,6 +4,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { collection, limit, onSnapshot, orderBy, query, type Timestamp } from "firebase/firestore";
 import { Clock } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { getClientAuth, getClientDb } from "@/firebase/client";
 
 interface ActivityItem {
@@ -20,6 +21,7 @@ interface ActivityItem {
 }
 
 export function ActivityFeed({ familyId }: { familyId: string }) {
+  const { dict } = useI18n();
   const [items, setItems] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -92,14 +94,12 @@ export function ActivityFeed({ familyId }: { familyId: string }) {
         <span className="icon-chip">
           <Clock className="w-5 h-5" aria-hidden="true" />
         </span>
-        <h2 className="font-semibold text-foreground">Recent activity</h2>
+        <h2 className="font-semibold text-foreground">{dict.dashboard.recentActivity}</h2>
       </div>
       {error ? (
-        <p className="text-muted text-sm">
-          Couldn’t load recent activity. Check your connection and Firestore access.
-        </p>
+        <p className="text-muted text-sm">{dict.dashboard.activityError}</p>
       ) : items.length === 0 ? (
-        <p className="text-muted text-sm">No activity yet.</p>
+        <p className="text-muted text-sm">{dict.dashboard.noActivity}</p>
       ) : (
         <div className="space-y-4">
           {items.map((item) => (

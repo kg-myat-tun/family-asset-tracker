@@ -5,7 +5,15 @@ import { liveLoanState } from "@/lib/loan-interest";
 import { borrowerName, lenderName } from "@/lib/loan-party";
 import type { FamilyMember, Loan } from "@/types";
 
-export function LoanAlerts({ loans, members }: { loans: Loan[]; members: FamilyMember[] }) {
+export function LoanAlerts({
+  loans,
+  members,
+  title,
+}: {
+  loans: Loan[];
+  members: FamilyMember[];
+  title: string;
+}) {
   const memberMap = Object.fromEntries(members.map((m) => [m.uid, m]));
 
   return (
@@ -14,7 +22,7 @@ export function LoanAlerts({ loans, members }: { loans: Loan[]; members: FamilyM
         <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-red-500/15">
           <TriangleAlert className="w-4 h-4 text-red-600 dark:text-red-400" aria-hidden="true" />
         </span>
-        Overdue loans
+        {title}
       </p>
       {loans.map((loan) => (
         <Link

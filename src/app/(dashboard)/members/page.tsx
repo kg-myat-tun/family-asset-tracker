@@ -3,6 +3,7 @@ import { InviteForm } from "@/components/members/InviteForm";
 import { MemberCard } from "@/components/members/MemberCard";
 import { requireUser } from "@/lib/auth.server";
 import { getFamilyForUser, getFamilyMembers } from "@/lib/family.server";
+import { getServerI18n } from "@/lib/i18n/server";
 import { getMemberWithAssetCount } from "@/lib/members.server";
 
 export default async function MembersPage() {
@@ -17,11 +18,12 @@ export default async function MembersPage() {
 
   const currentMember = membersWithCounts.find((m) => m.uid === user.uid);
   const isAdmin = currentMember?.role === "admin";
+  const { dict } = await getServerI18n();
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-foreground">Members</h1>
+        <h1 className="text-2xl font-semibold text-foreground">{dict.members.title}</h1>
         {isAdmin && <InviteForm />}
       </div>
 
