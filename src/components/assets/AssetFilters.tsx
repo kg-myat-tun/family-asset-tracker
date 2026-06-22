@@ -4,7 +4,7 @@ import { Search } from "lucide-react";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { AssetCategory, FamilyMember } from "@/types";
 
-const CATEGORIES = ["cash", "bank", "investment", "property", "crypto", "other"] as const;
+const CATEGORIES = ["cash", "bank", "investment", "property", "crypto", "stock", "other"] as const;
 
 const FIELD =
   "py-2 border border-line rounded-lg bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-accent-soft";

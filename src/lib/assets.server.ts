@@ -2,6 +2,7 @@ import "server-only";
 
 import { FieldValue, type Query } from "firebase-admin/firestore";
 import { getAdminDb } from "@/firebase/admin";
+import { applyLivePrices } from "@/lib/asset-price.server";
 import { canViewAsset } from "@/lib/visibility";
 import type { Asset, AssetCategory, Visibility } from "@/types";
 
@@ -15,6 +16,8 @@ function docToAsset(doc: FirebaseFirestore.DocumentSnapshot): Asset {
     category: d.category,
     currency: d.currency,
     amount: d.amount,
+    symbol: d.symbol ?? null,
+    quantity: d.quantity ?? null,
     description: d.description ?? "",
     attachmentURL: d.attachmentURL ?? null,
     visibility: d.visibility ?? "shared",
@@ -37,13 +40,15 @@ export async function getAssets(
   if (ownerId) query = query.where("ownerId", "==", ownerId);
 
   const snap = await query.get();
-  return snap.docs.map(docToAsset).filter((a) => canViewAsset(a, viewerUid));
+  const visible = snap.docs.map(docToAsset).filter((a) => canViewAsset(a, viewerUid));
+  return applyLivePrices(visible);
 }
 
 export async function getAsset(familyId: string, assetId: string): Promise<Asset | null> {
   const snap = await getAdminDb().doc(`families/${familyId}/assets/${assetId}`).get();
   if (!snap.exists || snap.data()?.deleted) return null;
-  return docToAsset(snap);
+  const [asset] = await applyLivePrices([docToAsset(snap)]);
+  return asset;
 }
 
 function stripUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
@@ -62,6 +67,8 @@ export async function createAsset(
     category: AssetCategory;
     currency: string;
     amount: number;
+    symbol?: string | null;
+    quantity?: number | null;
     description: string;
     attachmentURL?: string | null;
     visibility: Visibility;
@@ -71,6 +78,8 @@ export async function createAsset(
   await ref.set({
     ...data,
     attachmentURL: data.attachmentURL ?? null,
+    symbol: data.symbol ?? null,
+    quantity: data.quantity ?? null,
     ownerId,
     deleted: false,
     createdAt: FieldValue.serverTimestamp(),
@@ -85,7 +94,15 @@ export async function updateAsset(
   data: Partial<
     Pick<
       Asset,
-      "name" | "category" | "currency" | "amount" | "description" | "attachmentURL" | "visibility"
+      | "name"
+      | "category"
+      | "currency"
+      | "amount"
+      | "symbol"
+      | "quantity"
+      | "description"
+      | "attachmentURL"
+      | "visibility"
     >
   >,
 ): Promise<void> {

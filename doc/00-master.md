@@ -30,6 +30,7 @@ Execute these instruction files in sequence. Complete all tasks in a file before
 09-production.md           → Security rules audit, Zod validation, Sentry, E2E tests
 10-cicd-vercel.md          → CI/CD pipeline and Vercel deployment
 11-mmk-currency.md         → MMK currency: per-family rate (CBM-seeded), conversion fix
+12-dynamic-asset-value.md  → Stock/crypto assets: live value (Finnhub/Binance), symbol + quantity
 ```
 
 ---
@@ -71,7 +72,9 @@ Create `src/types/index.ts` in Phase 1 and keep it as the single source of truth
 ```typescript
 export type Role = "admin" | "member" | "viewer";
 export type MemberStatus = "active" | "invited" | "removed";
-export type AssetCategory = "cash" | "bank" | "investment" | "property" | "crypto" | "other";
+// "stock"/"crypto" are dynamic: value = quantity × live price; see 12-dynamic-asset-value.md
+export type AssetCategory =
+  | "cash" | "bank" | "investment" | "property" | "crypto" | "stock" | "other";
 export type LoanStatus = "active" | "partially_paid" | "settled";
 
 export interface FamilyMember {
@@ -100,7 +103,9 @@ export interface Asset {
   name: string;
   category: AssetCategory;
   currency: string;
-  amount: number;
+  amount: number;            // live value for stock/crypto; snapshot/fallback otherwise
+  symbol: string | null;     // ticker for stock/crypto (e.g. "AAPL", "BTC")
+  quantity: number | null;   // units held for stock/crypto
   description: string;
   attachmentURL: string | null;
   deleted: boolean;

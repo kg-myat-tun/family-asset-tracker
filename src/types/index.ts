@@ -1,6 +1,13 @@
 export type Role = "admin" | "member" | "viewer";
 export type MemberStatus = "active" | "invited" | "removed";
-export type AssetCategory = "cash" | "bank" | "investment" | "property" | "crypto" | "other";
+export type AssetCategory =
+  | "cash"
+  | "bank"
+  | "investment"
+  | "property"
+  | "crypto"
+  | "stock"
+  | "other";
 export type LoanStatus = "active" | "partially_paid" | "settled";
 // How interest compounds. "none" = no interest accrues (legacy loans default
 // here so a stored rate never silently back-charges). Rate is an annual %.
@@ -37,7 +44,13 @@ export interface Asset {
   name: string;
   category: AssetCategory;
   currency: string;
+  // Live value for dynamic (stock/crypto) assets; otherwise the user-entered value.
+  // For dynamic assets this is also the last-computed snapshot used as an offline fallback.
   amount: number;
+  // Ticker symbol (e.g. "AAPL", "BTC") for stock/crypto assets; null for static assets.
+  symbol: string | null;
+  // Units held for stock/crypto assets; null for static assets.
+  quantity: number | null;
   description: string;
   attachmentURL: string | null;
   visibility: Visibility;
