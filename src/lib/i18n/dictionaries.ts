@@ -72,6 +72,11 @@ export interface Dictionary {
     owner: string;
     description: string;
     unknownOwner: string;
+    searchPlaceholder: string;
+    allOwners: string;
+    allCategories: string;
+    noMatchTitle: string;
+    noMatchDesc: string;
     addTitle: string;
     editTitle: string;
     createAsset: string;
@@ -301,6 +306,11 @@ const en: Dictionary = {
     owner: "Owner",
     description: "Description",
     unknownOwner: "Unknown",
+    searchPlaceholder: "Search assets…",
+    allOwners: "All owners",
+    allCategories: "All categories",
+    noMatchTitle: "No matching assets",
+    noMatchDesc: "Try adjusting your search or filters.",
     addTitle: "Add asset",
     editTitle: "Edit asset",
     createAsset: "Create asset",
@@ -529,6 +539,11 @@ const my: Dictionary = {
     owner: "ပိုင်ရှင်",
     description: "ဖော်ပြချက်",
     unknownOwner: "မသိရှိ",
+    searchPlaceholder: "ပိုင်ဆိုင်မှု ရှာရန်…",
+    allOwners: "ပိုင်ရှင် အားလုံး",
+    allCategories: "အမျိုးအစား အားလုံး",
+    noMatchTitle: "ကိုက်ညီသော ပိုင်ဆိုင်မှု မရှိပါ",
+    noMatchDesc: "ရှာဖွေမှု သို့မဟုတ် စစ်ထုတ်မှုကို ပြောင်းကြည့်ပါ။",
     addTitle: "ပိုင်ဆိုင်မှု ထည့်ရန်",
     editTitle: "ပိုင်ဆိုင်မှု ပြင်ဆင်ရန်",
     createAsset: "ပိုင်ဆိုင်မှု ဖန်တီးမည်",
