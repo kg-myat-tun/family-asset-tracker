@@ -1,9 +1,6 @@
 {
   "permissions": {
-    "allow": [
-      "Bash(node_modules/.bin/biome check *)",
-      "Bash(node_modules/.bin/tsc *)"
-    ]
+    "allow": ["Bash(node_modules/.bin/biome check *)", "Bash(node_modules/.bin/tsc *)"]
   },
   "hooks": {
     "PreToolUse": [
