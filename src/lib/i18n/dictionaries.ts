@@ -89,12 +89,16 @@ export interface Dictionary {
     edit: string;
     deleteConfirm: string;
     privateLock: string;
+    symbol: string;
+    quantity: string;
+    holdings: string;
     categories: {
       cash: string;
       bank: string;
       investment: string;
       property: string;
       crypto: string;
+      stock: string;
       other: string;
     };
   };
@@ -332,12 +336,16 @@ const en: Dictionary = {
     edit: "Edit",
     deleteConfirm: "Delete",
     privateLock: "Private — only visible to you",
+    symbol: "Symbol",
+    quantity: "Quantity",
+    holdings: "Holdings",
     categories: {
       cash: "Cash",
       bank: "Bank",
       investment: "Investment",
       property: "Property",
       crypto: "Crypto",
+      stock: "Stock",
       other: "Other",
     },
   },
@@ -575,12 +583,16 @@ const my: Dictionary = {
     edit: "ပြင်မည်",
     deleteConfirm: "ဖျက်မှာသေချာပါသလား —",
     privateLock: "သီးသန့် — သင်သာ မြင်နိုင်သည်",
+    symbol: "သင်္ကေတ",
+    quantity: "အရေအတွက်",
+    holdings: "ပိုင်ဆိုင်မှု",
     categories: {
       cash: "ငွေသား",
       bank: "ဘဏ်",
       investment: "ရင်းနှီးမြှုပ်နှံမှု",
       property: "အိမ်ခြံမြေ",
       crypto: "ခရစ်တို",
+      stock: "စတော့",
       other: "အခြား",
     },
   },

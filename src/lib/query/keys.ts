@@ -19,6 +19,9 @@ export const keys = {
     detail: (familyId: string, loanId: string) => ["loans", familyId, "detail", loanId] as const,
   },
   dashboard: (familyId: string) => ["dashboard", familyId] as const,
+  // Ticker suggestions for the asset symbol combobox. Global reference data
+  // (not family-scoped) keyed by category + search query.
+  assetSymbols: (category: string, query: string) => ["assetSymbols", category, query] as const,
   // Realtime feeds — populated by onSnapshot listeners (not a queryFn), so the
   // cache is shared across components and survives navigation. Notifications are
   // already recipient-filtered server-side, and a browser session is one user,

@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { DeleteAssetButton } from "@/components/assets/DeleteAssetButton";
 import { VisibilityBadge } from "@/components/ui/VisibilityBadge";
+import { isDynamicAsset } from "@/lib/asset-price";
 import { convertAmount, formatCurrency } from "@/lib/currency";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { fetchJson } from "@/lib/query/fetch-json";
@@ -61,6 +62,19 @@ export function AssetDetailView({
         <Row label={dict.assets.category}>
           <span>{dict.assets.categories[asset.category]}</span>
         </Row>
+        {isDynamicAsset(asset.category) && asset.symbol && asset.quantity != null && (
+          <Row label={dict.assets.holdings}>
+            <span>
+              {asset.quantity} {asset.symbol}
+              {asset.quantity > 0 && (
+                <span className="text-muted">
+                  {" "}
+                  @ {formatCurrency(asset.amount / asset.quantity, asset.currency)}
+                </span>
+              )}
+            </span>
+          </Row>
+        )}
         <Row label={dict.assets.amount}>
           <div>
             <p className="font-semibold">{formatCurrency(asset.amount, asset.currency)}</p>

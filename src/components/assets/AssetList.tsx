@@ -5,6 +5,7 @@ import {
   ChevronRight,
   Home,
   Landmark,
+  LineChart,
   Lock,
   Package,
   TrendingUp,
@@ -22,6 +23,7 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
   investment: TrendingUp,
   property: Home,
   crypto: Bitcoin,
+  stock: LineChart,
   other: Package,
 };
 

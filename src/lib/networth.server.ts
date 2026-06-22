@@ -2,10 +2,11 @@ import "server-only";
 
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/firebase/admin";
+import { applyLivePrices } from "@/lib/asset-price.server";
 import { convertAmount } from "@/lib/currency.server";
 import { liveLoanState } from "@/lib/loan-interest";
 import { getLoans } from "@/lib/loans.server";
-import type { NetWorthSnapshot } from "@/types";
+import type { Asset, NetWorthSnapshot } from "@/types";
 
 export interface NetWorthBreakdown {
   assetsTotal: number;
@@ -35,10 +36,32 @@ export async function computeFamilyNetWorth(
     getLoans(familyId),
   ]);
 
-  const assetsTotal = assetsSnap.docs.reduce((sum, doc) => {
+  // Build asset records and resolve live stock/crypto values before totalling,
+  // so the daily net-worth snapshot reflects current market prices.
+  const assets: Asset[] = assetsSnap.docs.map((doc) => {
     const d = doc.data();
-    return sum + convertAmount(d.amount, d.currency, baseCurrency, rates);
-  }, 0);
+    return {
+      id: doc.id,
+      ownerId: d.ownerId,
+      name: d.name,
+      category: d.category,
+      currency: d.currency,
+      amount: d.amount,
+      symbol: d.symbol ?? null,
+      quantity: d.quantity ?? null,
+      description: d.description ?? "",
+      attachmentURL: d.attachmentURL ?? null,
+      visibility: d.visibility ?? "shared",
+      deleted: false,
+      createdAt: d.createdAt.toDate(),
+      updatedAt: d.updatedAt.toDate(),
+    } satisfies Asset;
+  });
+  const pricedAssets = await applyLivePrices(assets);
+  const assetsTotal = pricedAssets.reduce(
+    (sum, a) => sum + convertAmount(a.amount, a.currency, baseCurrency, rates),
+    0,
+  );
 
   let receivablesTotal = 0;
   let liabilitiesTotal = 0;

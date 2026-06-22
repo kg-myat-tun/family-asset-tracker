@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getAdminDb } from "@/firebase/admin";
+import { applyLivePrices } from "@/lib/asset-price.server";
 import { convertAmount, getCachedRates } from "@/lib/currency.server";
 import { liveLoanState } from "@/lib/loan-interest";
 import { getNetWorthSnapshots } from "@/lib/networth.server";
@@ -49,7 +50,7 @@ export async function getDashboardData(
     db.collection(`families/${familyId}/loans`).where("status", "!=", "settled").get(),
   ]);
 
-  const assets: Asset[] = assetsSnap.docs
+  const visibleAssets: Asset[] = assetsSnap.docs
     .map((doc) => {
       const d = doc.data();
       return {
@@ -59,6 +60,8 @@ export async function getDashboardData(
         category: d.category,
         currency: d.currency,
         amount: d.amount,
+        symbol: d.symbol ?? null,
+        quantity: d.quantity ?? null,
         description: d.description ?? "",
         attachmentURL: d.attachmentURL ?? null,
         visibility: d.visibility ?? "shared",
@@ -68,6 +71,9 @@ export async function getDashboardData(
       } satisfies Asset;
     })
     .filter((a) => canViewAsset(a, viewerUid));
+
+  // Replace stock/crypto amounts with live market values before any totalling.
+  const assets = await applyLivePrices(visibleAssets);
 
   const activeLoans: Loan[] = loansSnap.docs
     .map((doc) => {

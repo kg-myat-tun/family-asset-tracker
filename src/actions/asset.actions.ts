@@ -3,24 +3,76 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { logActivity } from "@/lib/activity.server";
+import { deleteActivityForItem, logActivity } from "@/lib/activity.server";
+import { isDynamicAsset, normalizeSymbol } from "@/lib/asset-price";
+import { getAssetPrice } from "@/lib/asset-price.server";
 import { createAsset, getAsset, softDeleteAsset, updateAsset } from "@/lib/assets.server";
 import { requireUser } from "@/lib/auth.server";
 import { formatCurrency } from "@/lib/currency.server";
 import { getFamilyForUser, getFamilyMembers } from "@/lib/family.server";
 import { canViewAsset } from "@/lib/visibility";
+import type { AssetCategory } from "@/types";
 
 export type AssetFormState = { errors?: Record<string, string[]> } | null;
 
-const AssetSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100),
-  category: z.enum(["cash", "bank", "investment", "property", "crypto", "other"]),
-  currency: z.string().length(3, "Invalid currency"),
-  amount: z.coerce.number().positive("Amount must be positive"),
-  description: z.string().max(500).optional().default(""),
-  attachmentURL: z.string().url().optional().or(z.literal("")),
-  visibility: z.enum(["private", "shared"]).default("shared"),
-});
+const AssetSchema = z
+  .object({
+    name: z.string().min(1, "Name is required").max(100),
+    category: z.enum(["cash", "bank", "investment", "property", "crypto", "stock", "other"]),
+    currency: z.string().length(3, "Invalid currency"),
+    amount: z.coerce.number().positive("Amount must be positive").optional(),
+    symbol: z.string().min(1).max(15).optional(),
+    quantity: z.coerce.number().positive("Quantity must be positive").optional(),
+    description: z.string().max(500).optional().default(""),
+    attachmentURL: z.string().url().optional().or(z.literal("")),
+    visibility: z.enum(["private", "shared"]).default("shared"),
+  })
+  .superRefine((d, ctx) => {
+    if (isDynamicAsset(d.category)) {
+      // Stock/crypto: value comes from symbol × live price, not a typed amount.
+      if (!d.symbol) {
+        ctx.addIssue({ code: "custom", path: ["symbol"], message: "Symbol is required" });
+      }
+      if (d.quantity == null) {
+        ctx.addIssue({ code: "custom", path: ["quantity"], message: "Quantity is required" });
+      }
+    } else if (d.amount == null) {
+      ctx.addIssue({ code: "custom", path: ["amount"], message: "Amount is required" });
+    }
+  });
+
+// Normalise a validated form into the shape persisted by the assets helper.
+// Dynamic assets are priced in USD; their `amount` is a snapshot (quantity ×
+// live price, or 0 when the price feed is unavailable) used as an offline fallback.
+async function toAssetData(data: z.infer<typeof AssetSchema>) {
+  if (isDynamicAsset(data.category)) {
+    const symbol = normalizeSymbol(data.symbol ?? "");
+    const quantity = data.quantity ?? 0;
+    const price = await getAssetPrice(data.category as AssetCategory, symbol);
+    return {
+      name: data.name,
+      category: data.category,
+      currency: "USD",
+      amount: price != null ? price * quantity : 0,
+      symbol,
+      quantity,
+      description: data.description,
+      attachmentURL: data.attachmentURL || undefined,
+      visibility: data.visibility,
+    };
+  }
+  return {
+    name: data.name,
+    category: data.category,
+    currency: data.currency,
+    amount: data.amount ?? 0,
+    symbol: null,
+    quantity: null,
+    description: data.description,
+    attachmentURL: data.attachmentURL || undefined,
+    visibility: data.visibility,
+  };
+}
 
 async function getContextOrThrow() {
   const user = await requireUser();
@@ -50,16 +102,15 @@ export async function createAssetAction(
   const parsed = AssetSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { errors: parsed.error.flatten().fieldErrors };
 
-  const assetId = await createAsset(family.id, user.uid, {
-    ...parsed.data,
-    attachmentURL: parsed.data.attachmentURL || undefined,
-  });
+  const assetData = await toAssetData(parsed.data);
+  const assetId = await createAsset(family.id, user.uid, assetData);
 
   await logActivity(
     family.id,
     "asset_added",
-    `Added asset "${parsed.data.name}" (${formatCurrency(parsed.data.amount, parsed.data.currency)})`,
-    parsed.data.visibility,
+    `Added asset "${assetData.name}" (${formatCurrency(assetData.amount, assetData.currency)})`,
+    assetData.visibility,
+    assetId,
   );
 
   revalidatePath("/assets");
@@ -83,17 +134,21 @@ export async function updateAssetAction(
   const parsed = AssetSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { errors: parsed.error.flatten().fieldErrors };
 
-  await updateAsset(family.id, assetId, {
-    ...parsed.data,
-    attachmentURL: parsed.data.attachmentURL || undefined,
-  });
+  const assetData = await toAssetData(parsed.data);
+  await updateAsset(family.id, assetId, assetData);
 
-  await logActivity(
-    family.id,
-    "asset_updated",
-    `Updated asset "${parsed.data.name}"`,
-    parsed.data.visibility,
-  );
+  if (assetData.visibility === "private") {
+    // Item is now hidden from the family — drop any activity it logged while shared.
+    await deleteActivityForItem(family.id, assetId);
+  } else {
+    await logActivity(
+      family.id,
+      "asset_updated",
+      `Updated asset "${assetData.name}"`,
+      assetData.visibility,
+      assetId,
+    );
+  }
 
   revalidatePath("/assets");
   revalidatePath(`/assets/${assetId}`);

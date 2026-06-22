@@ -71,6 +71,8 @@ Money is multi-currency: each asset/loan stores its own currency; the family has
 
 **MMK (Myanmar Kyat) is special:** the FX provider (Frankfurter/ECB) does **not** quote MMK, so without intervention `convertAmount` would treat 1 MMK = 1 USD. Instead each family stores a `settings.mmkPerUsd` (mirrored as `Family.mmkPerUsd`), seeded from the CBM API (`fetchCbmUsdRate`) at family creation and editable by an admin on the members page. It's injected into the rates map via `applyMmkRate` in `getCachedRates` (every live read) and in the `/api/fx-rates` cron (net-worth snapshots) — so no `convertAmount` caller changes. The selectable currency list is the single `SUPPORTED_CURRENCIES` in `src/lib/currency.ts`; `formatCurrency` renders MMK/JPY/KRW with no decimals. See `doc/11-mmk-currency.md`.
 
+**Dynamic assets (stock/crypto):** these categories don't store a fixed `amount` — the user records a `symbol` + `quantity`, and the value is `quantity × live price` in USD. Prices come from Binance (crypto, no key) and Finnhub (stocks, `FINNHUB_API_KEY`), fetched on read with a short `fetch` cache (see `src/lib/asset-price.server.ts`). The live value is injected by `applyLivePrices`, which **overwrites `amount`/`currency` in the server read helpers** (`getAssets`/`getAsset`, `dashboard.server`, `networth.server`) — mirroring the `applyMmkRate` pattern — so every downstream `convertAmount` caller is unchanged. The stored `amount` is a snapshot/fallback used when a price fetch fails. Both feeds are treated as USD (documented limitation). See `doc/12-dynamic-asset-value.md`.
+
 ### i18n
 
 Cookie-based locale (`en` / `my` — Burmese) in `src/lib/i18n/`, no URL locale prefix. Config and dictionaries are static; `I18nProvider` supplies translations client-side.

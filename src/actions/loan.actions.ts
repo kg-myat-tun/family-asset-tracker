@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { logActivity } from "@/lib/activity.server";
+import { deleteActivityForItem, logActivity } from "@/lib/activity.server";
 import { requireUser } from "@/lib/auth.server";
 import { formatCurrency } from "@/lib/currency.server";
 import { getFamilyForUser, getFamilyMembers } from "@/lib/family.server";
@@ -146,7 +146,7 @@ export async function createLoanAction(
     direction === "lent"
       ? `${selfName} lent ${amount} to ${counterLabel}`
       : `${selfName} borrowed ${amount} from ${counterLabel}`;
-  await logActivity(family.id, "loan_created", message, parsed.data.visibility);
+  await logActivity(family.id, "loan_created", message, parsed.data.visibility, loanId);
 
   revalidatePath("/loans");
   redirect(`/loans/${loanId}`);
@@ -214,12 +214,18 @@ export async function updateLoanAction(
     currency: editableAmount ? parsed.data.currency : undefined,
   });
 
-  await logActivity(
-    family.id,
-    "loan_updated",
-    `Updated loan "${parsed.data.description}"`,
-    parsed.data.visibility,
-  );
+  if (parsed.data.visibility === "private") {
+    // Loan is now hidden from the family — drop any activity it logged while shared.
+    await deleteActivityForItem(family.id, loanId);
+  } else {
+    await logActivity(
+      family.id,
+      "loan_updated",
+      `Updated loan "${parsed.data.description}"`,
+      parsed.data.visibility,
+      loanId,
+    );
+  }
 
   revalidatePath("/loans");
   revalidatePath(`/loans/${loanId}`);
@@ -239,6 +245,7 @@ export async function deleteLoanAction(loanId: string): Promise<void> {
     "loan_deleted",
     `Deleted loan "${loan.description}"`,
     loan.visibility,
+    loanId,
   );
 
   revalidatePath("/loans");
@@ -283,6 +290,7 @@ export async function recordRepaymentAction(
     "repayment_made",
     `Repayment of ${formatCurrency(parsed.data.amount, parsed.data.currency)} recorded on "${loan.description}"`,
     loan.visibility,
+    loanId,
   );
 
   revalidatePath(`/loans/${loanId}`);
