@@ -1,9 +1,7 @@
 {
   "framework": "nextjs",
   "git": {
-    "deploymentEnabled": {
-      "master": false
-    }
+    "deploymentEnabled": false
   },
   "crons": [
     {
