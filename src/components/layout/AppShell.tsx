@@ -7,7 +7,7 @@ import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
 
 interface AppShellProps {
-  user: { uid: string; email: string };
+  user: { uid: string; email: string; displayName: string; photoURL: string | null };
   family: Family;
   members: FamilyMember[];
   children: React.ReactNode;

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import type { Family } from "@/types";
 import { LanguageToggle } from "./LanguageToggle";
@@ -6,7 +7,7 @@ import { NotificationBell } from "./NotificationBell";
 import { ThemeToggle } from "./ThemeToggle";
 
 interface HeaderProps {
-  user: { uid: string; email: string };
+  user: { uid: string; email: string; displayName: string; photoURL: string | null };
   family: Family;
   onMenuClick?: () => void;
 }
@@ -46,7 +47,21 @@ export function Header({ user, family, onMenuClick }: HeaderProps) {
         </span>
       </div>
       <div className="flex items-center gap-1.5 sm:gap-3 md:gap-4 min-w-0">
-        <span className="hidden sm:inline text-sm text-foreground/70 truncate">{user.email}</span>
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="w-8 h-8 rounded-full bg-accent-soft text-accent-strong overflow-hidden shrink-0">
+            {user.photoURL ? (
+              <Image src={user.photoURL} alt={user.displayName} width={32} height={32} />
+            ) : (
+              <span className="w-full h-full flex items-center justify-center text-sm font-semibold">
+                {user.displayName[0]?.toUpperCase()}
+              </span>
+            )}
+          </span>
+          <span className="hidden sm:flex flex-col min-w-0 leading-tight">
+            <span className="text-sm font-medium text-foreground truncate">{user.displayName}</span>
+            <span className="text-xs text-muted truncate">{user.email}</span>
+          </span>
+        </div>
         <NotificationBell familyId={family.id} />
         <LanguageToggle />
         <ThemeToggle />

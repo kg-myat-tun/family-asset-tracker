@@ -146,7 +146,7 @@ export async function createLoanAction(
     direction === "lent"
       ? `${selfName} lent ${amount} to ${counterLabel}`
       : `${selfName} borrowed ${amount} from ${counterLabel}`;
-  await logActivity(family.id, "loan_created", message);
+  await logActivity(family.id, "loan_created", message, parsed.data.visibility);
 
   revalidatePath("/loans");
   redirect(`/loans/${loanId}`);
@@ -214,7 +214,12 @@ export async function updateLoanAction(
     currency: editableAmount ? parsed.data.currency : undefined,
   });
 
-  await logActivity(family.id, "loan_updated", `Updated loan "${parsed.data.description}"`);
+  await logActivity(
+    family.id,
+    "loan_updated",
+    `Updated loan "${parsed.data.description}"`,
+    parsed.data.visibility,
+  );
 
   revalidatePath("/loans");
   revalidatePath(`/loans/${loanId}`);
@@ -229,7 +234,12 @@ export async function deleteLoanAction(loanId: string): Promise<void> {
   await assertCanMutateLoan(family.id, loan, user.uid);
 
   await deleteLoan(family.id, loanId);
-  await logActivity(family.id, "loan_deleted", `Deleted loan "${loan.description}"`);
+  await logActivity(
+    family.id,
+    "loan_deleted",
+    `Deleted loan "${loan.description}"`,
+    loan.visibility,
+  );
 
   revalidatePath("/loans");
   redirect("/loans");
@@ -272,6 +282,7 @@ export async function recordRepaymentAction(
     family.id,
     "repayment_made",
     `Repayment of ${formatCurrency(parsed.data.amount, parsed.data.currency)} recorded on "${loan.description}"`,
+    loan.visibility,
   );
 
   revalidatePath(`/loans/${loanId}`);

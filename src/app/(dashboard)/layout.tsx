@@ -13,10 +13,21 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!family) redirect("/onboarding");
 
   const members = await getFamilyMembers(family.id);
+  const self = members.find((m) => m.uid === user.uid);
+  const email = user.email ?? "";
 
   return (
     <Providers>
-      <AppShell user={{ uid: user.uid, email: user.email ?? "" }} family={family} members={members}>
+      <AppShell
+        user={{
+          uid: user.uid,
+          email,
+          displayName: self?.displayName || email,
+          photoURL: self?.photoURL ?? null,
+        }}
+        family={family}
+        members={members}
+      >
         {children}
       </AppShell>
     </Providers>
