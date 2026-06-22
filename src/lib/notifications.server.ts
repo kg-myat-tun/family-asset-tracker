@@ -5,7 +5,7 @@ import { getAdminDb } from "@/firebase/admin";
 import { formatCurrency } from "@/lib/currency.server";
 import { getFamilyMembers } from "@/lib/family.server";
 import { hasSchedule, liveLoanState, nextInstallment } from "@/lib/loan-interest";
-import { borrowerName, lenderName } from "@/lib/loan-party";
+import { borrowerName } from "@/lib/loan-party";
 import { getLoans } from "@/lib/loans.server";
 import type { Loan, NotificationType } from "@/types";
 
@@ -55,9 +55,7 @@ function buildMessage(
 ): { title: string; body: string } {
   const amount = formatCurrency(target.amount, loan.currency);
   const isLender = loan.lenderId === recipientUid;
-  const what = target.installment
-    ? `installment #${target.installment} of ${amount}`
-    : amount;
+  const what = target.installment ? `installment #${target.installment} of ${amount}` : amount;
   const stake = isLender ? `${borrowerName(loan, memberMap)} owes you ${what}` : `you owe ${what}`;
   const when =
     type === "loan_overdue"

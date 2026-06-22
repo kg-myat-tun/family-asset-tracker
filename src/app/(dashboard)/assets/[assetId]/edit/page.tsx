@@ -27,11 +27,7 @@ export default async function EditAssetPage({ params }: { params: Promise<{ asse
   return (
     <div className="max-w-xl mx-auto">
       <h1 className="text-2xl font-semibold text-foreground mb-6">{dict.assets.editTitle}</h1>
-      <AssetForm
-        action={boundAction}
-        defaultValues={asset}
-        submitLabel={dict.common.saveChanges}
-      />
+      <AssetForm action={boundAction} defaultValues={asset} submitLabel={dict.common.saveChanges} />
     </div>
   );
 }

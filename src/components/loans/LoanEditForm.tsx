@@ -85,9 +85,7 @@ export function LoanEditForm({ action, loan, memberMap, editableAmount }: Props)
           </select>
         </div>
       </div>
-      {!editableAmount && (
-        <p className="-mt-3 text-xs text-muted">{dict.loans.lockedNote}</p>
-      )}
+      {!editableAmount && <p className="-mt-3 text-xs text-muted">{dict.loans.lockedNote}</p>}
 
       <div className="flex gap-3">
         <div className="flex-1">

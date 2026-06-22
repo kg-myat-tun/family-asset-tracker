@@ -23,7 +23,15 @@ const STATUS_STYLES = {
   settled: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
 };
 
-export function LoanList({ loans, memberMap, currentUid, baseCurrency, rates, today, dict }: Props) {
+export function LoanList({
+  loans,
+  memberMap,
+  currentUid,
+  baseCurrency,
+  rates,
+  today,
+  dict,
+}: Props) {
   const statusLabels: Record<LoanStatus, string> = {
     active: dict.loans.statusActive,
     partially_paid: dict.loans.statusPartiallyPaid,
