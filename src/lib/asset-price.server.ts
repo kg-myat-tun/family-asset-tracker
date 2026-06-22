@@ -4,10 +4,14 @@ import { normalizeSymbol, type SymbolOption } from "@/lib/asset-price";
 import { getRequiredEnv } from "@/lib/env";
 import type { Asset, AssetCategory } from "@/types";
 
-// Binance public ticker — no API key. Symbols are quoted against USDT (≈ USD).
-const BINANCE_API = "https://api.binance.com/api/v3/ticker/price";
+// Binance public market data — no API key. Symbols are quoted against USDT (≈ USD).
+// We use the data-only `data-api.binance.vision` host rather than `api.binance.com`
+// because the latter geo-blocks US IPs with HTTP 451, and Vercel's default region
+// (iad1, US East) is one of them — so on production every crypto price came back
+// null and assets showed $0. The data host serves the same endpoints unrestricted.
+const BINANCE_API = "https://data-api.binance.vision/api/v3/ticker/price";
 // Binance exchange metadata — lists every tradable pair (used for symbol search).
-const BINANCE_EXCHANGE_INFO = "https://api.binance.com/api/v3/exchangeInfo";
+const BINANCE_EXCHANGE_INFO = "https://data-api.binance.vision/api/v3/exchangeInfo";
 // Finnhub quote — free tier, needs FINNHUB_API_KEY. `c` is the current price.
 const FINNHUB_API = "https://finnhub.io/api/v1/quote";
 // Finnhub symbol search — returns matching stocks for a query string.
