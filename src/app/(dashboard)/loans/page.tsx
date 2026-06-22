@@ -106,7 +106,11 @@ export default async function LoansPage({
                 : "text-muted hover:text-foreground/80"
             }`}
           >
-            {t === "lent" ? dict.loans.tabLent : t === "owed" ? dict.loans.tabOwe : dict.loans.tabAll}
+            {t === "lent"
+              ? dict.loans.tabLent
+              : t === "owed"
+                ? dict.loans.tabOwe
+                : dict.loans.tabAll}
           </Link>
         ))}
       </div>

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { VisibilityBadge } from "@/components/ui/VisibilityBadge";
 import { convertAmount, formatCurrency } from "@/lib/currency.server";
-import { buildSchedule, hasSchedule, liveLoanState, nextInstallment } from "@/lib/loan-interest";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { buildSchedule, hasSchedule, liveLoanState, nextInstallment } from "@/lib/loan-interest";
 import { borrowerName, isExternalParty, lenderName } from "@/lib/loan-party";
 import type { CompoundingPeriod, FamilyMember, Loan, Repayment } from "@/types";
 import { DeleteLoanButton } from "./DeleteLoanButton";
@@ -53,10 +53,7 @@ export function LoanDetail({
           </div>
           {canMutate && (
             <div className="flex items-center gap-3 shrink-0">
-              <Link
-                href={`/loans/${loan.id}/edit`}
-                className="text-sm text-accent hover:underline"
-              >
+              <Link href={`/loans/${loan.id}/edit`} className="text-sm text-accent hover:underline">
                 {dict.assets.edit}
               </Link>
               <DeleteLoanButton loanId={loan.id} label={loan.description} />

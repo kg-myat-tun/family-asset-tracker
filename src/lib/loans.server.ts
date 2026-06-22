@@ -162,8 +162,7 @@ export async function updateLoan(
     // If the interest terms change, freeze interest accrued under the old terms
     // up to now so the new rate only applies going forward, not retroactively.
     const termsChanged =
-      data.interestRate !== loan.interestRate ||
-      data.compoundingPeriod !== loan.compoundingPeriod;
+      data.interestRate !== loan.interestRate || data.compoundingPeriod !== loan.compoundingPeriod;
     if (termsChanged) {
       const now = new Date();
       const frozen =

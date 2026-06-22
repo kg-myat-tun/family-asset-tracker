@@ -68,7 +68,11 @@ export default async function DashboardPage() {
       </div>
 
       {data.overdueLoans.length > 0 && (
-        <LoanAlerts loans={data.overdueLoans} members={members} title={dict.dashboard.overdueLoans} />
+        <LoanAlerts
+          loans={data.overdueLoans}
+          members={members}
+          title={dict.dashboard.overdueLoans}
+        />
       )}
 
       <div className="card p-6">
