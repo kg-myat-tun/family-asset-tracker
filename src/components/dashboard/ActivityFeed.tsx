@@ -1,11 +1,13 @@
 "use client";
 
+import { skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, limit, onSnapshot, orderBy, query, type Timestamp } from "firebase/firestore";
 import { Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { getClientAuth, getClientDb } from "@/firebase/client";
+import { keys } from "@/lib/query/keys";
 
 interface ActivityItem {
   id: string;
@@ -22,11 +24,19 @@ interface ActivityItem {
 
 export function ActivityFeed({ familyId }: { familyId: string }) {
   const { dict } = useI18n();
-  const [items, setItems] = useState<ActivityItem[]>([]);
+  const queryClient = useQueryClient();
+  // The onSnapshot listener writes into this cache entry; `skipToken` means the
+  // query itself never fetches but re-renders whenever the cache updates.
+  const { data: items = [] } = useQuery<ActivityItem[]>({
+    queryKey: keys.activity(familyId),
+    queryFn: skipToken,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
+    const setItems = (next: ActivityItem[]) =>
+      queryClient.setQueryData(keys.activity(familyId), next);
     let unsubscribeSnapshot = () => {};
 
     // Wait for Firebase Auth to restore the signed-in user before attaching the
@@ -76,7 +86,7 @@ export function ActivityFeed({ familyId }: { familyId: string }) {
       unsubscribeSnapshot();
       unsubscribeAuth();
     };
-  }, [familyId]);
+  }, [familyId, queryClient]);
 
   if (loading) {
     return (

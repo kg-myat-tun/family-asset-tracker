@@ -1,7 +1,7 @@
 import { ArrowDownLeft, ArrowUpRight, ChevronRight, Handshake, Lock } from "lucide-react";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { convertAmount, formatCurrency } from "@/lib/currency.server";
+import { convertAmount, formatCurrency } from "@/lib/currency";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { liveLoanState } from "@/lib/loan-interest";
 import { borrowerName, isExternalParty, lenderName } from "@/lib/loan-party";

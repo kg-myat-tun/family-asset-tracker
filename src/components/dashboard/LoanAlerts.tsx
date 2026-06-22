@@ -1,6 +1,6 @@
 import { TriangleAlert } from "lucide-react";
 import Link from "next/link";
-import { formatCurrency } from "@/lib/currency.server";
+import { formatCurrency } from "@/lib/currency";
 import { liveLoanState } from "@/lib/loan-interest";
 import { borrowerName, lenderName } from "@/lib/loan-party";
 import type { FamilyMember, Loan } from "@/types";

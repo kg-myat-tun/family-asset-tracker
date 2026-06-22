@@ -1,4 +1,4 @@
-import { convertAmount, formatCurrency } from "@/lib/currency.server";
+import { convertAmount, formatCurrency } from "@/lib/currency";
 
 interface Props {
   amount: number;
