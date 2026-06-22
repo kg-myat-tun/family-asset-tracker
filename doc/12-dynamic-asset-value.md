@@ -12,9 +12,11 @@ into "dynamic" assets whose `amount` is derived, not entered.
 ## Price sources
 
 - **Crypto → Binance** public ticker API:
-  `https://api.binance.com/api/v3/ticker/price?symbol={SYMBOL}USDT`. No API key. The symbol
-  is stored bare (`BTC`) and a `USDT` quote pair is appended at fetch time; USDT ≈ USD, so
-  the price is treated as USD.
+  `https://data-api.binance.vision/api/v3/ticker/price?symbol={SYMBOL}USDT`. No API key. The
+  symbol is stored bare (`BTC`) and a `USDT` quote pair is appended at fetch time; USDT ≈ USD,
+  so the price is treated as USD. We use the `data-api.binance.vision` data host rather than
+  `api.binance.com` because the latter returns HTTP 451 to US IPs — including Vercel's default
+  `iad1` region — which made every crypto price null (assets showed $0) on production.
 - **Stock → Finnhub** quote API:
   `https://finnhub.io/api/v1/quote?symbol={SYMBOL}&token={FINNHUB_API_KEY}`. The free tier
   needs an API key (`FINNHUB_API_KEY`). The `c` field is the current price.
@@ -93,7 +95,7 @@ import { getRequiredEnv } from "@/lib/env";
 import { normalizeSymbol } from "@/lib/asset-price";
 import type { Asset, AssetCategory } from "@/types";
 
-const BINANCE_API = "https://api.binance.com/api/v3/ticker/price";
+const BINANCE_API = "https://data-api.binance.vision/api/v3/ticker/price";
 const FINNHUB_API = "https://finnhub.io/api/v1/quote";
 
 async function fetchCryptoPrice(symbol: string): Promise<number | null> {
