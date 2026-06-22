@@ -20,6 +20,8 @@ export interface Dictionary {
     emailPlaceholder: string;
     password: string;
     passwordPlaceholder: string;
+    showPassword: string;
+    hidePassword: string;
     signIn: string;
     signingIn: string;
     or: string;
@@ -186,6 +188,13 @@ export interface Dictionary {
     roleViewer: string;
     remove: string;
     removeConfirm: string;
+    mmkRateTitle: string;
+    mmkRateDesc: string;
+    mmkRateLabel: string;
+    mmkRateSave: string;
+    mmkRateSaving: string;
+    mmkRateUseCbm: string;
+    mmkRateSaved: string;
   };
   profile: {
     title: string;
@@ -253,6 +262,8 @@ const en: Dictionary = {
     emailPlaceholder: "you@example.com",
     password: "Password",
     passwordPlaceholder: "Your password",
+    showPassword: "Show password",
+    hidePassword: "Hide password",
     signIn: "Sign in",
     signingIn: "Signing in...",
     or: "or",
@@ -420,6 +431,14 @@ const en: Dictionary = {
     roleViewer: "Viewer",
     remove: "Remove",
     removeConfirm: "Remove",
+    mmkRateTitle: "Myanmar Kyat rate",
+    mmkRateDesc:
+      "Our FX provider doesn't quote MMK, so set how many kyat equal 1 USD. Used for all MMK conversions.",
+    mmkRateLabel: "MMK per 1 USD",
+    mmkRateSave: "Save rate",
+    mmkRateSaving: "Saving...",
+    mmkRateUseCbm: "Use CBM rate",
+    mmkRateSaved: "Saved",
   },
   profile: {
     title: "Your profile",
@@ -487,6 +506,8 @@ const my: Dictionary = {
     emailPlaceholder: "you@example.com",
     password: "စကားဝှက်",
     passwordPlaceholder: "သင့်စကားဝှက်",
+    showPassword: "စကားဝှက် ပြရန်",
+    hidePassword: "စကားဝှက် ဖျောက်ရန်",
     signIn: "ဝင်မည်",
     signingIn: "ဝင်နေသည်...",
     or: "သို့မဟုတ်",
@@ -653,6 +674,14 @@ const my: Dictionary = {
     roleViewer: "ကြည့်ရှုသူ",
     remove: "ဖယ်ရှားမည်",
     removeConfirm: "ဖယ်ရှားမှာသေချာပါသလား —",
+    mmkRateTitle: "မြန်မာကျပ် ငွေလဲနှုန်း",
+    mmkRateDesc:
+      "ကျွန်ုပ်တို့၏ FX ဝန်ဆောင်မှုတွင် MMK မပါသဖြင့် ၁ ဒေါ်လာ = ကျပ်မည်မျှဟု သတ်မှတ်ပါ။ MMK ပြောင်းလဲမှုအားလုံးအတွက် သုံးပါသည်။",
+    mmkRateLabel: "၁ USD = ကျပ်",
+    mmkRateSave: "နှုန်း သိမ်းမည်",
+    mmkRateSaving: "သိမ်းနေသည်...",
+    mmkRateUseCbm: "CBM နှုန်း သုံးမည်",
+    mmkRateSaved: "သိမ်းပြီး",
   },
   profile: {
     title: "သင့်ကိုယ်ရေးအချက်အလက်",

@@ -2,21 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireUser } from "@/lib/auth.server";
-import { getFamilyForUser, getFamilyMembers } from "@/lib/family.server";
+import { requireAdmin } from "@/lib/auth.server";
 import { changeMemberRole, inviteMember, removeMember } from "@/lib/members.server";
-
-async function requireAdmin() {
-  const user = await requireUser();
-  const family = await getFamilyForUser(user.uid);
-  if (!family) throw new Error("No family");
-
-  const members = await getFamilyMembers(family.id);
-  const self = members.find((m) => m.uid === user.uid);
-  if (self?.role !== "admin") throw new Error("Admin only");
-
-  return { user, family };
-}
 
 const InviteSchema = z.object({
   email: z.string().email(),

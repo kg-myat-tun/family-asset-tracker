@@ -2,6 +2,8 @@ import "server-only";
 
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/firebase/admin";
+import { DEFAULT_MMK_PER_USD } from "@/lib/currency";
+import { fetchCbmUsdRate } from "@/lib/currency.server";
 import type { Family, FamilyMember } from "@/types";
 
 export async function getFamilyForUser(uid: string): Promise<Family | null> {
@@ -21,10 +23,20 @@ export async function getFamilyForUser(uid: string): Promise<Family | null> {
     id: familyDoc.id,
     name: data.name,
     baseCurrency: data.settings?.baseCurrency ?? "USD",
+    mmkPerUsd: data.settings?.mmkPerUsd ?? DEFAULT_MMK_PER_USD,
     inviteCode: data.inviteCode ?? "",
     createdBy: data.createdBy,
     createdAt: data.createdAt.toDate(),
   };
+}
+
+// Admin-set family settings (currently just the MMK rate). Merged so other
+// settings keys (baseCurrency) are preserved.
+export async function updateFamilySettings(
+  familyId: string,
+  settings: { mmkPerUsd: number },
+): Promise<void> {
+  await getAdminDb().doc(`families/${familyId}`).set({ settings }, { merge: true });
 }
 
 export async function getFamilyMembers(familyId: string): Promise<FamilyMember[]> {
@@ -86,6 +98,8 @@ export async function createFamily(
   const db = getAdminDb();
   const inviteCode = await generateUniqueInviteCode();
   const identity = await memberIdentity(uid);
+  // Seed the MMK rate from CBM (market constant if unreachable); admin can edit later.
+  const mmkPerUsd = (await fetchCbmUsdRate()) ?? DEFAULT_MMK_PER_USD;
   const batch = db.batch();
 
   const familyRef = db.collection("families").doc();
@@ -94,7 +108,7 @@ export async function createFamily(
     inviteCode,
     createdBy: uid,
     createdAt: FieldValue.serverTimestamp(),
-    settings: { baseCurrency },
+    settings: { baseCurrency, mmkPerUsd },
   });
 
   const memberRef = db.doc(`families/${familyRef.id}/members/${uid}`);

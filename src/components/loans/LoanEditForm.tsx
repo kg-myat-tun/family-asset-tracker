@@ -4,10 +4,9 @@ import { useActionState } from "react";
 import type { LoanFormState } from "@/actions/loan.actions";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { VisibilityField } from "@/components/ui/VisibilityField";
+import { SUPPORTED_CURRENCIES } from "@/lib/currency";
 import { borrowerName, lenderName } from "@/lib/loan-party";
 import type { FamilyMember, Loan } from "@/types";
-
-const COMMON_CURRENCIES = ["USD", "EUR", "GBP", "THB", "JPY", "SGD", "AUD", "CAD"];
 
 interface Props {
   action: (prevState: LoanFormState, formData: FormData) => Promise<LoanFormState>;
@@ -77,11 +76,13 @@ export function LoanEditForm({ action, loan, memberMap, editableAmount }: Props)
             disabled={!editableAmount}
             className="w-full px-4 py-2 border border-line rounded-lg disabled:opacity-50"
           >
-            {[loan.currency, ...COMMON_CURRENCIES.filter((c) => c !== loan.currency)].map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
+            {[loan.currency, ...SUPPORTED_CURRENCIES.filter((c) => c !== loan.currency)].map(
+              (c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ),
+            )}
           </select>
         </div>
       </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { loginWithEmail, loginWithGoogle } from "@/lib/auth.client";
@@ -8,6 +9,7 @@ export function LoginForm() {
   const { dict } = useI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -56,15 +58,29 @@ export function LoginForm() {
 
         <label className="block space-y-2">
           <span className="text-sm font-medium text-foreground">{dict.auth.password}</span>
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder={dict.auth.passwordPlaceholder}
-            autoComplete="current-password"
-            required
-            className="w-full rounded-2xl border border-line bg-card px-4 py-3 text-sm text-foreground outline-none transition focus:border-accent focus:ring-4 focus:ring-accent-soft"
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder={dict.auth.passwordPlaceholder}
+              autoComplete="current-password"
+              required
+              className="w-full rounded-2xl border border-line bg-card px-4 py-3 pr-12 text-sm text-foreground outline-none transition focus:border-accent focus:ring-4 focus:ring-accent-soft"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((shown) => !shown)}
+              aria-label={showPassword ? dict.auth.hidePassword : dict.auth.showPassword}
+              className="absolute inset-y-0 right-0 flex items-center pr-4 text-muted transition hover:text-foreground"
+            >
+              {showPassword ? (
+                <EyeOff className="h-5 w-5" aria-hidden="true" />
+              ) : (
+                <Eye className="h-5 w-5" aria-hidden="true" />
+              )}
+            </button>
+          </div>
         </label>
 
         {error ? (

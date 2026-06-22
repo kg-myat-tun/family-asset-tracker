@@ -1,6 +1,7 @@
 import { InviteCodePanel } from "@/components/members/InviteCodePanel";
 import { InviteForm } from "@/components/members/InviteForm";
 import { MemberCard } from "@/components/members/MemberCard";
+import { MmkRateForm } from "@/components/members/MmkRateForm";
 import { requireUser } from "@/lib/auth.server";
 import { getFamilyForUser, getFamilyMembers } from "@/lib/family.server";
 import { getServerI18n } from "@/lib/i18n/server";
@@ -28,6 +29,8 @@ export default async function MembersPage() {
       </div>
 
       {isAdmin && family.inviteCode && <InviteCodePanel code={family.inviteCode} />}
+
+      {isAdmin && <MmkRateForm mmkPerUsd={family.mmkPerUsd} />}
 
       <div className="space-y-3">
         {membersWithCounts.map((member) => (

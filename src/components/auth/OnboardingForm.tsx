@@ -3,9 +3,8 @@
 import { useActionState, useState } from "react";
 import { createFamilyAction, joinFamilyAction } from "@/actions/family.actions";
 import { useI18n } from "@/components/i18n/I18nProvider";
+import { SUPPORTED_CURRENCIES } from "@/lib/currency";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
-
-const COMMON_CURRENCIES = ["USD", "EUR", "GBP", "THB", "JPY", "SGD", "AUD", "CAD"];
 
 type Mode = "create" | "join";
 
@@ -70,7 +69,7 @@ function CreateFamilyForm({ dict }: { dict: Dictionary }) {
           defaultValue="USD"
           className="w-full px-4 py-2 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-soft"
         >
-          {COMMON_CURRENCIES.map((c) => (
+          {SUPPORTED_CURRENCIES.map((c) => (
             <option key={c} value={c}>
               {c}
             </option>

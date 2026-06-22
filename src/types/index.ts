@@ -23,6 +23,9 @@ export interface Family {
   id: string;
   name: string;
   baseCurrency: string;
+  // MMK per 1 USD, per-family (stored at settings.mmkPerUsd). The FX provider has
+  // no MMK rate, so this is the family-set rate used for MMK conversion.
+  mmkPerUsd: number;
   inviteCode: string;
   createdBy: string;
   createdAt: Date;

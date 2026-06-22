@@ -4,9 +4,8 @@ import { useActionState, useState } from "react";
 import { createLoanAction, type LoanFormState } from "@/actions/loan.actions";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { VisibilityField } from "@/components/ui/VisibilityField";
+import { SUPPORTED_CURRENCIES } from "@/lib/currency";
 import type { FamilyMember } from "@/types";
-
-const COMMON_CURRENCIES = ["USD", "EUR", "GBP", "THB", "JPY", "SGD", "AUD", "CAD"];
 
 type Direction = "lent" | "borrowed";
 type CounterpartyType = "member" | "external";
@@ -161,7 +160,7 @@ export function LoanForm({ candidates, defaultCurrency }: Props) {
             defaultValue={defaultCurrency}
             className="w-full px-4 py-2 border border-line rounded-lg"
           >
-            {COMMON_CURRENCIES.map((c) => (
+            {SUPPORTED_CURRENCIES.map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>
