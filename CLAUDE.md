@@ -72,6 +72,8 @@ Cookie-based locale (`en` / `my` — Burmese) in `src/lib/i18n/`, no URL locale 
 - `revalidatePath()` / `revalidateTag()` after every mutation.
 - Tailwind only (v4, via `@tailwindcss/postcss`); mobile-first; no inline styles or CSS modules.
 - No `console.log` in committed code.
+- **pnpm only** — never `npm` or `yarn`. The lockfile is `pnpm-lock.yaml`; using another package manager will desync it.
+- Adding a **client-side `onSnapshot`** read requires a matching `allow read` rule in `firestore.rules` — without it the listener silently returns nothing (the Admin SDK bypasses rules, so server reads never reveal this).
 
 ## Reference docs
 
