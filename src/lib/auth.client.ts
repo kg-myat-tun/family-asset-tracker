@@ -36,17 +36,15 @@ export async function loginWithGoogle() {
 }
 
 export async function logout() {
-  await signOut(getClientAuth());
-  const response = await fetch("/api/auth/logout", {
-    method: "POST",
-    redirect: "follow",
-  });
-
-  if (!response.ok && response.type !== "opaqueredirect") {
-    throw new Error("Failed to sign out.");
+  // Clear the server session first, but never let a failure here strand the
+  // user on a stale page — always navigate to /login afterwards. The httpOnly
+  // session cookie is what actually gates access, and the POST clears it.
+  try {
+    await signOut(getClientAuth());
+    await fetch("/api/auth/logout", { method: "POST" });
+  } finally {
+    window.location.href = "/login";
   }
-
-  window.location.href = "/login";
 }
 
 async function exchangeTokenForSession(idToken: string) {

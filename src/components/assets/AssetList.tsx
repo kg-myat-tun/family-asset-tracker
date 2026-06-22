@@ -27,14 +27,24 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
 
 interface Props {
   assets: Asset[];
+  memberMap: Record<string, string>;
   baseCurrency: string;
   rates: Record<string, number>;
   dict: Dictionary;
+  // True when a search/filter is active, so an empty list means "no matches"
+  // rather than "no assets yet".
+  filtered?: boolean;
 }
 
-export function AssetList({ assets, baseCurrency, rates, dict }: Props) {
+export function AssetList({ assets, memberMap, baseCurrency, rates, dict, filtered }: Props) {
   if (assets.length === 0) {
-    return (
+    return filtered ? (
+      <EmptyState
+        icon={Wallet}
+        title={dict.assets.noMatchTitle}
+        description={dict.assets.noMatchDesc}
+      />
+    ) : (
       <EmptyState
         icon={Wallet}
         title={dict.assets.noAssetsTitle}
@@ -75,6 +85,9 @@ export function AssetList({ assets, baseCurrency, rates, dict }: Props) {
                     />
                   )}
                 </div>
+                <p className="mt-0.5 text-xs text-muted truncate">
+                  {memberMap[asset.ownerId] ?? dict.assets.unknownOwner}
+                </p>
                 <div className="mt-2 flex items-center gap-2 max-w-[16rem]">
                   <div className="h-1.5 flex-1 rounded-full bg-foreground/6 overflow-hidden">
                     <div
