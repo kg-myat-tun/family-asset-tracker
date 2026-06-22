@@ -14,14 +14,24 @@ const serviceAccountSchema = z.object({
   private_key: z.string().min(1),
 });
 
+function readServiceAccountRaw() {
+  // On hosted environments (e.g. Vercel) the credential is provided inline as
+  // JSON via FIREBASE_SERVICE_ACCOUNT_KEY. Locally we fall back to a file path.
+  const inline = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+  if (inline) {
+    return inline;
+  }
+
+  const serviceAccountPath = resolve(getRequiredEnv("FIREBASE_SERVICE_ACCOUNT_KEY_PATH"));
+  return readFileSync(serviceAccountPath, "utf8");
+}
+
 function getAdminApp() {
   if (getApps().length > 0) {
     return getApp();
   }
 
-  const serviceAccountPath = resolve(getRequiredEnv("FIREBASE_SERVICE_ACCOUNT_KEY_PATH"));
-  const serviceAccountRaw = readFileSync(serviceAccountPath, "utf8");
-  const serviceAccount = serviceAccountSchema.parse(JSON.parse(serviceAccountRaw));
+  const serviceAccount = serviceAccountSchema.parse(JSON.parse(readServiceAccountRaw()));
 
   return initializeApp({
     credential: cert({
