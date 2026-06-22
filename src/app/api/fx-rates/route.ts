@@ -2,6 +2,8 @@ import { FieldValue } from "firebase-admin/firestore";
 import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import { getAdminDb } from "@/firebase/admin";
+import { DEFAULT_MMK_PER_USD } from "@/lib/currency";
+import { applyMmkRate } from "@/lib/currency.server";
 import { recordNetWorthSnapshot } from "@/lib/networth.server";
 
 const FX_API = "https://api.frankfurter.app/latest?base=USD";
@@ -37,9 +39,13 @@ export async function GET(request: Request) {
   let snapshots = 0;
   await Promise.all(
     familiesSnap.docs.map(async (familyDoc) => {
-      const baseCurrency = familyDoc.data().settings?.baseCurrency ?? "USD";
+      const settings = familyDoc.data().settings ?? {};
+      const baseCurrency = settings.baseCurrency ?? "USD";
+      // Inject the family's MMK rate — Frankfurter has no MMK, so snapshots would
+      // otherwise treat MMK 1:1 with USD.
+      const familyRates = applyMmkRate(rates, settings.mmkPerUsd ?? DEFAULT_MMK_PER_USD);
       try {
-        await recordNetWorthSnapshot(familyDoc.id, baseCurrency, rates);
+        await recordNetWorthSnapshot(familyDoc.id, baseCurrency, familyRates);
         snapshots++;
       } catch (err) {
         console.error(`net-worth snapshot failed for family ${familyDoc.id}:`, err);

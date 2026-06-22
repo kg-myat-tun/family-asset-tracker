@@ -69,6 +69,8 @@ Domain types live in `src/types/index.ts` (single source of truth). Firestore la
 
 Money is multi-currency: each asset/loan stores its own currency; the family has a `baseCurrency`. FX rates are refreshed by a daily Vercel Cron hitting `/api/fx-rates`; a second cron hits `/api/reminders` for loan due-date notifications (see `vercel.json`). Cron routes are protected by `CRON_SECRET`. Always format money with `Intl.NumberFormat` / the currency helpers — never render raw floats.
 
+**MMK (Myanmar Kyat) is special:** the FX provider (Frankfurter/ECB) does **not** quote MMK, so without intervention `convertAmount` would treat 1 MMK = 1 USD. Instead each family stores a `settings.mmkPerUsd` (mirrored as `Family.mmkPerUsd`), seeded from the CBM API (`fetchCbmUsdRate`) at family creation and editable by an admin on the members page. It's injected into the rates map via `applyMmkRate` in `getCachedRates` (every live read) and in the `/api/fx-rates` cron (net-worth snapshots) — so no `convertAmount` caller changes. The selectable currency list is the single `SUPPORTED_CURRENCIES` in `src/lib/currency.ts`; `formatCurrency` renders MMK/JPY/KRW with no decimals. See `doc/11-mmk-currency.md`.
+
 ### i18n
 
 Cookie-based locale (`en` / `my` — Burmese) in `src/lib/i18n/`, no URL locale prefix. Config and dictionaries are static; `I18nProvider` supplies translations client-side.

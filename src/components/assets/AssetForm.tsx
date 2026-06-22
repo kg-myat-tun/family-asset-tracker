@@ -4,22 +4,10 @@ import { useActionState } from "react";
 import type { AssetFormState } from "@/actions/asset.actions";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { VisibilityField } from "@/components/ui/VisibilityField";
+import { SUPPORTED_CURRENCIES } from "@/lib/currency";
 import type { Asset, AssetCategory } from "@/types";
 
 const CATEGORIES = ["cash", "bank", "investment", "property", "crypto", "other"] as const;
-const COMMON_CURRENCIES = [
-  "USD",
-  "EUR",
-  "GBP",
-  "THB",
-  "JPY",
-  "SGD",
-  "AUD",
-  "CAD",
-  "CNY",
-  "HKD",
-  "KRW",
-];
 
 interface Props {
   action: (prevState: AssetFormState, formData: FormData) => Promise<AssetFormState>;
@@ -104,7 +92,7 @@ export function AssetForm({ action, defaultValues, submitLabel }: Props) {
             defaultValue={defaultValues?.currency ?? "USD"}
             className="w-full px-4 py-2 border border-line rounded-lg"
           >
-            {COMMON_CURRENCIES.map((c) => (
+            {SUPPORTED_CURRENCIES.map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>

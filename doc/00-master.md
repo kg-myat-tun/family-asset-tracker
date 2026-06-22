@@ -28,6 +28,8 @@ Execute these instruction files in sequence. Complete all tasks in a file before
 07-dashboard.md            → Overview page, charts, activity feed, real-time updates
 08-polish.md               → Loading states, error boundaries, empty states, mobile
 09-production.md           → Security rules audit, Zod validation, Sentry, E2E tests
+10-cicd-vercel.md          → CI/CD pipeline and Vercel deployment
+11-mmk-currency.md         → MMK currency: per-family rate (CBM-seeded), conversion fix
 ```
 
 ---
@@ -86,6 +88,7 @@ export interface Family {
   id: string;
   name: string;
   baseCurrency: string;
+  mmkPerUsd: number; // per-family MMK→USD rate (settings.mmkPerUsd); see 11-mmk-currency.md
   inviteCode: string;
   createdBy: string;
   createdAt: Date;
