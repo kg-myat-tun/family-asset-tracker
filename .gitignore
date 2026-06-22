@@ -58,3 +58,4 @@ serviceAccountKey.json
 # logs
 logs
 *.log
+.env*

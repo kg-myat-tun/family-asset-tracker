@@ -1,0 +1,48 @@
+name: Deploy to Vercel (Production)
+
+# CI/CD: production deploys happen ONLY when master changes.
+# The actual build runs on Vercel — this workflow just fires the deploy hook.
+on:
+  push:
+    branches: [master]
+
+# A newer push to master cancels an in-flight run for an older commit.
+concurrency:
+  group: vercel-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Lint & trigger Vercel deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Non-blocking: master currently has pre-existing Biome format violations.
+      # Run `pnpm lint:fix`, commit, then drop `continue-on-error` to enforce it.
+      - name: Lint
+        continue-on-error: true
+        run: pnpm lint
+
+      - name: Trigger Vercel production deploy
+        env:
+          VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$VERCEL_DEPLOY_HOOK_URL" ]; then
+            echo "::error::VERCEL_DEPLOY_HOOK_URL secret is not set"
+            exit 1
+          fi
+          curl -fsS -X POST "$VERCEL_DEPLOY_HOOK_URL"
