@@ -59,6 +59,7 @@ export async function createAssetAction(
     family.id,
     "asset_added",
     `Added asset "${parsed.data.name}" (${formatCurrency(parsed.data.amount, parsed.data.currency)})`,
+    parsed.data.visibility,
   );
 
   revalidatePath("/assets");
@@ -87,7 +88,12 @@ export async function updateAssetAction(
     attachmentURL: parsed.data.attachmentURL || undefined,
   });
 
-  await logActivity(family.id, "asset_updated", `Updated asset "${parsed.data.name}"`);
+  await logActivity(
+    family.id,
+    "asset_updated",
+    `Updated asset "${parsed.data.name}"`,
+    parsed.data.visibility,
+  );
 
   revalidatePath("/assets");
   revalidatePath(`/assets/${assetId}`);
