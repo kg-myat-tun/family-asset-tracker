@@ -55,6 +55,12 @@ serviceAccountKey.json
 .vscode/*
 !.vscode/extensions.json
 
+# claude code (keep shared settings.json, ignore personal local overrides)
+.claude/settings.local.json
+
+# graphify (generated knowledge graph)
+graphify-out/
+
 # logs
 logs
 *.log
