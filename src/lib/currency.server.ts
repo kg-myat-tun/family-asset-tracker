@@ -3,6 +3,10 @@ import "server-only";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/firebase/admin";
 
+// Pure helpers moved to currency.ts so client components can use them too.
+// Re-exported here so existing server-side imports keep working unchanged.
+export { convertAmount, formatCurrency } from "@/lib/currency";
+
 const FX_API = "https://api.frankfurter.app/latest?base=USD";
 
 export async function getCachedRates(familyId: string): Promise<Record<string, number>> {
@@ -24,8 +28,10 @@ export async function getCachedRates(familyId: string): Promise<Record<string, n
 }
 
 export async function fetchAndCacheRates(familyId: string): Promise<Record<string, number>> {
+  // Tagged so the daily FX cron can force-refresh the upstream rates with
+  // revalidateTag("fx-rates"); otherwise this stays cached for up to an hour.
   const res = await fetch(FX_API, {
-    next: { revalidate: 3600 },
+    next: { revalidate: 3600, tags: ["fx-rates"] },
   });
   if (!res.ok) throw new Error("FX API unavailable");
   const { rates } = (await res.json()) as { rates: Record<string, number> };
@@ -39,25 +45,4 @@ export async function fetchAndCacheRates(familyId: string): Promise<Record<strin
   });
 
   return rates;
-}
-
-export function convertAmount(
-  amount: number,
-  fromCurrency: string,
-  toCurrency: string,
-  rates: Record<string, number>,
-): number {
-  if (fromCurrency === toCurrency) return amount;
-  const fromRate = rates[fromCurrency] ?? 1;
-  const toRate = rates[toCurrency] ?? 1;
-  return (amount / fromRate) * toRate;
-}
-
-export function formatCurrency(amount: number, currency: string, locale = "en-US"): string {
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
 }

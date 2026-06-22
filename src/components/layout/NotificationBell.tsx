@@ -1,5 +1,6 @@
 "use client";
 
+import { skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, limit, onSnapshot, query, type Timestamp, where } from "firebase/firestore";
 import { Bell } from "lucide-react";
@@ -11,6 +12,7 @@ import {
 } from "@/actions/notification.actions";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { getClientAuth, getClientDb } from "@/firebase/client";
+import { keys } from "@/lib/query/keys";
 
 interface Item {
   id: string;
@@ -24,11 +26,18 @@ interface Item {
 
 export function NotificationBell({ familyId }: { familyId: string }) {
   const { dict } = useI18n();
-  const [items, setItems] = useState<Item[]>([]);
+  const queryClient = useQueryClient();
+  // Shared cache entry, fed by the onSnapshot listener below (see ActivityFeed
+  // for the same pattern). `skipToken` keeps the query render-only.
+  const { data: items = [] } = useQuery<Item[]>({
+    queryKey: keys.notifications(familyId),
+    queryFn: skipToken,
+  });
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const setItems = (next: Item[]) => queryClient.setQueryData(keys.notifications(familyId), next);
     let unsubscribeSnapshot = () => {};
 
     // Mirror the activity feed: wait for Auth to rehydrate before attaching the
@@ -71,7 +80,7 @@ export function NotificationBell({ familyId }: { familyId: string }) {
       unsubscribeSnapshot();
       unsubscribeAuth();
     };
-  }, [familyId]);
+  }, [familyId, queryClient]);
 
   // Close the dropdown on an outside click.
   useEffect(() => {

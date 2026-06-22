@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { VisibilityBadge } from "@/components/ui/VisibilityBadge";
-import { convertAmount, formatCurrency } from "@/lib/currency.server";
+import { convertAmount, formatCurrency } from "@/lib/currency";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { buildSchedule, hasSchedule, liveLoanState, nextInstallment } from "@/lib/loan-interest";
 import { borrowerName, isExternalParty, lenderName } from "@/lib/loan-party";

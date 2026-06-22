@@ -1,10 +1,13 @@
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { notFound } from "next/navigation";
-import { LoanDetail } from "@/components/loans/LoanDetail";
+import { LoanDetailView } from "@/components/loans/LoanDetailView";
 import { requireUser } from "@/lib/auth.server";
 import { getCachedRates } from "@/lib/currency.server";
 import { getFamilyForUser, getFamilyMembers } from "@/lib/family.server";
 import { getServerI18n } from "@/lib/i18n/server";
 import { getLoan, getRepayments } from "@/lib/loans.server";
+import { getQueryClient } from "@/lib/query/get-query-client";
+import { keys } from "@/lib/query/keys";
 import { canViewLoan } from "@/lib/visibility";
 
 export default async function LoanDetailPage({ params }: { params: Promise<{ loanId: string }> }) {
@@ -23,21 +26,26 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ loa
 
   if (!loan || !canViewLoan(loan, user.uid)) notFound();
 
-  const memberMap = Object.fromEntries(members.map((m) => [m.uid, m]));
   const self = members.find((m) => m.uid === user.uid);
   const canAct = loan.lenderId === user.uid || loan.borrowerId === user.uid;
   const canMutate = canAct || self?.role === "admin";
 
+  // Seed the detail query from the data already loaded for the gate above.
+  const queryClient = getQueryClient();
+  queryClient.setQueryData(keys.loans.detail(family.id, loanId), { loan, repayments });
+
   return (
-    <LoanDetail
-      loan={loan}
-      repayments={repayments}
-      memberMap={memberMap}
-      baseCurrency={family.baseCurrency}
-      rates={rates}
-      canAct={canAct}
-      canMutate={canMutate}
-      dict={dict}
-    />
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <LoanDetailView
+        familyId={family.id}
+        loanId={loanId}
+        baseCurrency={family.baseCurrency}
+        rates={rates}
+        members={members}
+        canAct={canAct}
+        canMutate={canMutate}
+        dict={dict}
+      />
+    </HydrationBoundary>
   );
 }

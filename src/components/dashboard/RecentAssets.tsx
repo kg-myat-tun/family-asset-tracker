@@ -1,6 +1,6 @@
 import { ArrowRight, Wallet } from "lucide-react";
 import Link from "next/link";
-import { formatCurrency } from "@/lib/currency.server";
+import { formatCurrency } from "@/lib/currency";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Asset } from "@/types";
 

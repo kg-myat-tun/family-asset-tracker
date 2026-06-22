@@ -1,4 +1,5 @@
 import { FieldValue } from "firebase-admin/firestore";
+import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import { getAdminDb } from "@/firebase/admin";
 import { recordNetWorthSnapshot } from "@/lib/networth.server";
@@ -26,6 +27,11 @@ export async function GET(request: Request) {
     batch.set(rateRef, { base: "USD", rates, fetchedAt: FieldValue.serverTimestamp() });
   }
   await batch.commit();
+
+  // Bust the cached upstream FX fetch so app-side reads pick up today's rates
+  // immediately rather than waiting out the 1h revalidate window. Next 16 takes
+  // a cache-life profile as the second arg; expire:0 forces immediate purge.
+  revalidateTag("fx-rates", { expire: 0 });
 
   // Record a daily net-worth snapshot per family using the fresh rates.
   let snapshots = 0;
