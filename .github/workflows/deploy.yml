@@ -31,10 +31,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Non-blocking: master currently has pre-existing Biome format violations.
-      # Run `pnpm lint:fix`, commit, then drop `continue-on-error` to enforce it.
+      # Blocking gate: a lint failure stops the deploy.
       - name: Lint
-        continue-on-error: true
         run: pnpm lint
 
       - name: Trigger Vercel production deploy
