@@ -1,6 +1,6 @@
 "use client";
 
-import { Handshake, LayoutDashboard, User, Users, Wallet } from "lucide-react";
+import { Handshake, LayoutDashboard, TrendingUp, User, Users, Wallet } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/components/i18n/I18nProvider";
@@ -9,6 +9,7 @@ import type { Family } from "@/types";
 const NAV_ITEMS = [
   { href: "/dashboard", key: "overview", icon: LayoutDashboard },
   { href: "/assets", key: "assets", icon: Wallet },
+  { href: "/income", key: "income", icon: TrendingUp },
   { href: "/loans", key: "loans", icon: Handshake },
   { href: "/members", key: "members", icon: Users },
   { href: "/profile", key: "profile", icon: User },
