@@ -10,7 +10,14 @@ export interface Dictionary {
     optional: string;
     external: string;
   };
-  nav: { overview: string; assets: string; loans: string; members: string; profile: string };
+  nav: {
+    overview: string;
+    assets: string;
+    income: string;
+    loans: string;
+    members: string;
+    profile: string;
+  };
   header: { baseCurrency: string; signOut: string; signingOut: string; notifications: string };
   sidebar: { family: string; appName: string };
   auth: {
@@ -100,6 +107,42 @@ export interface Dictionary {
       crypto: string;
       stock: string;
       other: string;
+    };
+  };
+  income: {
+    title: string;
+    unitOne: string;
+    unitOther: string;
+    addIncome: string;
+    monthlyTotal: string;
+    monthlyIncome: string;
+    noIncomeTitle: string;
+    noIncomeDesc: string;
+    noMatchTitle: string;
+    noMatchDesc: string;
+    name: string;
+    amount: string;
+    currency: string;
+    frequency: string;
+    receivedAt: string;
+    owner: string;
+    description: string;
+    descriptionOptional: string;
+    unknownOwner: string;
+    addTitle: string;
+    editTitle: string;
+    createIncome: string;
+    delete: string;
+    edit: string;
+    deleteConfirm: string;
+    privateLock: string;
+    oneOffBadge: string;
+    frequencies: {
+      weekly: string;
+      monthly: string;
+      quarterly: string;
+      yearly: string;
+      one_off: string;
     };
   };
   loans: {
@@ -248,6 +291,7 @@ const en: Dictionary = {
   nav: {
     overview: "Overview",
     assets: "Assets",
+    income: "Income",
     loans: "Loans",
     members: "Members",
     profile: "Profile",
@@ -347,6 +391,42 @@ const en: Dictionary = {
       crypto: "Crypto",
       stock: "Stock",
       other: "Other",
+    },
+  },
+  income: {
+    title: "Income",
+    unitOne: "stream",
+    unitOther: "streams",
+    addIncome: "+ Add income",
+    monthlyTotal: "Monthly income (recurring)",
+    monthlyIncome: "Monthly income",
+    noIncomeTitle: "No income yet",
+    noIncomeDesc: "Add a salary or other recurring income to track it here.",
+    noMatchTitle: "No matching income",
+    noMatchDesc: "Try adjusting your search or filters.",
+    name: "Name",
+    amount: "Amount",
+    currency: "Currency",
+    frequency: "Frequency",
+    receivedAt: "Date received",
+    owner: "Owner",
+    description: "Description",
+    descriptionOptional: "Description (optional)",
+    unknownOwner: "Unknown",
+    addTitle: "Add income",
+    editTitle: "Edit income",
+    createIncome: "Add income",
+    delete: "Delete",
+    edit: "Edit",
+    deleteConfirm: "Delete",
+    privateLock: "Private — only visible to you",
+    oneOffBadge: "One-off",
+    frequencies: {
+      weekly: "Weekly",
+      monthly: "Monthly",
+      quarterly: "Quarterly",
+      yearly: "Yearly",
+      one_off: "One-off",
     },
   },
   loans: {
@@ -496,6 +576,7 @@ const my: Dictionary = {
   nav: {
     overview: "ပင်မ",
     assets: "ပိုင်ဆိုင်မှုများ",
+    income: "ဝင်ငွေ",
     loans: "ချေးငွေများ",
     members: "အဖွဲ့ဝင်များ",
     profile: "ကိုယ်ရေးအချက်အလက်",
@@ -594,6 +675,42 @@ const my: Dictionary = {
       crypto: "ခရစ်တို",
       stock: "စတော့",
       other: "အခြား",
+    },
+  },
+  income: {
+    title: "ဝင်ငွေ",
+    unitOne: "လမ်းကြောင်း",
+    unitOther: "လမ်းကြောင်းများ",
+    addIncome: "+ ဝင်ငွေ ထည့်ရန်",
+    monthlyTotal: "လစဉ် ဝင်ငွေ (ပုံမှန်)",
+    monthlyIncome: "လစဉ် ဝင်ငွေ",
+    noIncomeTitle: "ဝင်ငွေ မရှိသေးပါ",
+    noIncomeDesc: "လစာ သို့မဟုတ် ပုံမှန်ဝင်ငွေ ထည့်၍ ဤနေရာတွင် ခြေရာခံပါ။",
+    noMatchTitle: "ကိုက်ညီသော ဝင်ငွေ မရှိပါ",
+    noMatchDesc: "ရှာဖွေမှု သို့မဟုတ် စစ်ထုတ်မှုကို ပြောင်းကြည့်ပါ။",
+    name: "အမည်",
+    amount: "ပမာဏ",
+    currency: "ငွေကြေး",
+    frequency: "အကြိမ်ရေ",
+    receivedAt: "ရရှိသည့်ရက်စွဲ",
+    owner: "ပိုင်ရှင်",
+    description: "ဖော်ပြချက်",
+    descriptionOptional: "ဖော်ပြချက် (ရွေးချယ်နိုင်)",
+    unknownOwner: "မသိရှိ",
+    addTitle: "ဝင်ငွေ ထည့်ရန်",
+    editTitle: "ဝင်ငွေ ပြင်ဆင်ရန်",
+    createIncome: "ဝင်ငွေ ထည့်ရန်",
+    delete: "ဖျက်မည်",
+    edit: "ပြင်မည်",
+    deleteConfirm: "ဖျက်မှာသေချာပါသလား —",
+    privateLock: "သီးသန့် — သင်သာ မြင်နိုင်သည်",
+    oneOffBadge: "တစ်ကြိမ်တည်း",
+    frequencies: {
+      weekly: "အပတ်စဉ်",
+      monthly: "လစဉ်",
+      quarterly: "သုံးလတစ်ကြိမ်",
+      yearly: "နှစ်စဉ်",
+      one_off: "တစ်ကြိမ်တည်း",
     },
   },
   loans: {
