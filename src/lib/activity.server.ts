@@ -7,6 +7,8 @@ import type { Visibility } from "@/types";
 export type ActivityType =
   | "asset_added"
   | "asset_updated"
+  | "income_added"
+  | "income_updated"
   | "loan_created"
   | "loan_updated"
   | "loan_deleted"

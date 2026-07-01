@@ -13,6 +13,13 @@ export const keys = {
       ["assets", familyId, "list", owner ?? null] as const,
     detail: (familyId: string, assetId: string) => ["assets", familyId, "detail", assetId] as const,
   },
+  income: {
+    all: (familyId: string) => ["income", familyId] as const,
+    list: (familyId: string, owner?: string) =>
+      ["income", familyId, "list", owner ?? null] as const,
+    detail: (familyId: string, incomeId: string) =>
+      ["income", familyId, "detail", incomeId] as const,
+  },
   loans: {
     all: (familyId: string) => ["loans", familyId] as const,
     list: (familyId: string) => ["loans", familyId, "list"] as const,
