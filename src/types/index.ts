@@ -15,6 +15,7 @@ export type CompoundingPeriod = "none" | "monthly" | "annually";
 // "shared" = visible to the whole family; "private" = visible only to the
 // owner (assets) or loan participants. Legacy docs without the field are shared.
 export type Visibility = "private" | "shared";
+export type IncomeFrequency = "weekly" | "monthly" | "quarterly" | "yearly" | "one_off";
 
 export interface FamilyMember {
   uid: string;
@@ -53,6 +54,23 @@ export interface Asset {
   quantity: number | null;
   description: string;
   attachmentURL: string | null;
+  visibility: Visibility;
+  deleted: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Income {
+  id: string;
+  ownerId: string;
+  name: string;
+  currency: string;
+  // Per-occurrence amount in `currency` (e.g. one paycheck, one yearly bonus).
+  amount: number;
+  frequency: IncomeFrequency;
+  // Date for one-off income; null for recurring frequencies.
+  receivedAt: Date | null;
+  description: string;
   visibility: Visibility;
   deleted: boolean;
   createdAt: Date;

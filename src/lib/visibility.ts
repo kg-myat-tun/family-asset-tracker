@@ -1,4 +1,4 @@
-import type { Asset, Loan } from "@/types";
+import type { Asset, Income, Loan } from "@/types";
 
 /**
  * Visibility rules. "shared" items are visible to the whole family; "private"
@@ -20,4 +20,11 @@ export function canViewLoan(
   return (
     loan.visibility === "shared" || loan.lenderId === viewerUid || loan.borrowerId === viewerUid
   );
+}
+
+export function canViewIncome(
+  income: Pick<Income, "ownerId" | "visibility">,
+  viewerUid: string,
+): boolean {
+  return income.visibility === "shared" || income.ownerId === viewerUid;
 }
