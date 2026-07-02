@@ -21,10 +21,8 @@ export default async function EditLoanPage({ params }: { params: Promise<{ loanI
 
   if (!loan || !canViewLoan(loan, user.uid)) notFound();
 
-  const self = members.find((m) => m.uid === user.uid);
   const isParticipant = loan.lenderId === user.uid || loan.borrowerId === user.uid;
-  const canMutate = isParticipant || self?.role === "admin";
-  if (!canMutate) redirect(`/loans/${loan.id}`);
+  if (!isParticipant) redirect(`/loans/${loan.id}`);
 
   const memberMap = Object.fromEntries(members.map((m) => [m.uid, m]));
   const boundAction = updateLoanAction.bind(null, loan.id);

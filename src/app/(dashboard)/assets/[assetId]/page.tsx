@@ -35,8 +35,7 @@ export default async function AssetDetailPage({
   queryClient.setQueryData(keys.assets.detail(family.id, assetId), asset);
 
   const owner = members.find((m) => m.uid === asset.ownerId);
-  const self = members.find((m) => m.uid === user.uid);
-  const canMutate = asset.ownerId === user.uid || self?.role === "admin";
+  const canMutate = asset.ownerId === user.uid;
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
