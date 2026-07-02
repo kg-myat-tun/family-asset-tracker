@@ -145,6 +145,82 @@ export interface Dictionary {
       one_off: string;
     };
   };
+  transactions: {
+    title: string;
+    unitOne: string;
+    unitOther: string;
+    addTransaction: string;
+    monthlyIncome: string;
+    monthlyExpense: string;
+    monthlyNet: string;
+    noTransactionsTitle: string;
+    noTransactionsDesc: string;
+    noMatchTitle: string;
+    noMatchDesc: string;
+    name: string;
+    amount: string;
+    currency: string;
+    type: string;
+    typeIncome: string;
+    typeExpense: string;
+    category: string;
+    customLabel: string;
+    customLabelPlaceholder: string;
+    date: string;
+    owner: string;
+    description: string;
+    descriptionOptional: string;
+    unknownOwner: string;
+    addTitle: string;
+    editTitle: string;
+    createTransaction: string;
+    delete: string;
+    edit: string;
+    deleteConfirm: string;
+    privateLock: string;
+    recurringBadge: string;
+    trendTitle: string;
+    trendEmpty: string;
+    manageRecurring: string;
+    categories: {
+      salary: string;
+      bonus: string;
+      gift: string;
+      investment: string;
+      housing: string;
+      groceries: string;
+      utilities: string;
+      transport: string;
+      healthcare: string;
+      entertainment: string;
+      debt: string;
+      other: string;
+    };
+    recurring: {
+      title: string;
+      addRule: string;
+      frequency: string;
+      frequencies: {
+        weekly: string;
+        monthly: string;
+        quarterly: string;
+        yearly: string;
+      };
+      active: string;
+      paused: string;
+      pause: string;
+      resume: string;
+      nextDue: string;
+      noRulesTitle: string;
+      noRulesDesc: string;
+      addRuleTitle: string;
+      editRuleTitle: string;
+      createRule: string;
+      delete: string;
+      edit: string;
+      deleteConfirm: string;
+    };
+  };
   loans: {
     title: string;
     unitOne: string;
@@ -429,6 +505,82 @@ const en: Dictionary = {
       one_off: "One-off",
     },
   },
+  transactions: {
+    title: "Transactions",
+    unitOne: "transaction",
+    unitOther: "transactions",
+    addTransaction: "+ Add transaction",
+    monthlyIncome: "Income this month",
+    monthlyExpense: "Expenses this month",
+    monthlyNet: "Net cash flow",
+    noTransactionsTitle: "No transactions yet",
+    noTransactionsDesc: "Log income or an expense, or set up a recurring rule to track it here.",
+    noMatchTitle: "No matching transactions",
+    noMatchDesc: "Try adjusting your search or filters.",
+    name: "Name",
+    amount: "Amount",
+    currency: "Currency",
+    type: "Type",
+    typeIncome: "Income",
+    typeExpense: "Expense",
+    category: "Category",
+    customLabel: "Label",
+    customLabelPlaceholder: "e.g. Piano lessons",
+    date: "Date",
+    owner: "Owner",
+    description: "Description",
+    descriptionOptional: "Description (optional)",
+    unknownOwner: "Unknown",
+    addTitle: "Add transaction",
+    editTitle: "Edit transaction",
+    createTransaction: "Add transaction",
+    delete: "Delete",
+    edit: "Edit",
+    deleteConfirm: "Delete",
+    privateLock: "Private — only visible to you",
+    recurringBadge: "Recurring",
+    trendTitle: "Income vs. expenses over time",
+    trendEmpty: "Not enough history yet — check back after a couple of months.",
+    manageRecurring: "Manage recurring",
+    categories: {
+      salary: "Salary",
+      bonus: "Bonus",
+      gift: "Gift",
+      investment: "Investment",
+      housing: "Housing",
+      groceries: "Groceries",
+      utilities: "Utilities",
+      transport: "Transport",
+      healthcare: "Healthcare",
+      entertainment: "Entertainment",
+      debt: "Debt payment",
+      other: "Other",
+    },
+    recurring: {
+      title: "Recurring rules",
+      addRule: "+ Add recurring rule",
+      frequency: "Frequency",
+      frequencies: {
+        weekly: "Weekly",
+        monthly: "Monthly",
+        quarterly: "Quarterly",
+        yearly: "Yearly",
+      },
+      active: "Active",
+      paused: "Paused",
+      pause: "Pause",
+      resume: "Resume",
+      nextDue: "Next due",
+      noRulesTitle: "No recurring rules yet",
+      noRulesDesc: "Add a salary, rent, or subscription to auto-post it every period.",
+      addRuleTitle: "Add recurring rule",
+      editRuleTitle: "Edit recurring rule",
+      createRule: "Add rule",
+      delete: "Delete",
+      edit: "Edit",
+      deleteConfirm: "Delete",
+    },
+  },
   loans: {
     title: "Loans",
     unitOne: "loan",
@@ -711,6 +863,82 @@ const my: Dictionary = {
       quarterly: "သုံးလတစ်ကြိမ်",
       yearly: "နှစ်စဉ်",
       one_off: "တစ်ကြိမ်တည်း",
+    },
+  },
+  transactions: {
+    title: "ငွေစာရင်း",
+    unitOne: "မှတ်တမ်း",
+    unitOther: "မှတ်တမ်းများ",
+    addTransaction: "+ ငွေစာရင်း ထည့်ရန်",
+    monthlyIncome: "ဒီလ ဝင်ငွေ",
+    monthlyExpense: "ဒီလ အသုံးစရိတ်",
+    monthlyNet: "အသားတင် ငွေစီးဆင်းမှု",
+    noTransactionsTitle: "ငွေစာရင်း မရှိသေးပါ",
+    noTransactionsDesc: "ဝင်ငွေ သို့မဟုတ် အသုံးစရိတ်တစ်ခု ထည့်ပါ၊ သို့မဟုတ် ပုံမှန်စည်းမျဉ်းတစ်ခု သတ်မှတ်ပါ။",
+    noMatchTitle: "ကိုက်ညီသော ငွေစာရင်း မရှိပါ",
+    noMatchDesc: "ရှာဖွေမှု သို့မဟုတ် စစ်ထုတ်မှုကို ပြောင်းကြည့်ပါ။",
+    name: "အမည်",
+    amount: "ပမာဏ",
+    currency: "ငွေကြေး",
+    type: "အမျိုးအစား",
+    typeIncome: "ဝင်ငွေ",
+    typeExpense: "အသုံးစရိတ်",
+    category: "အမျိုးအစား",
+    customLabel: "အမည်တံဆိပ်",
+    customLabelPlaceholder: "ဥပမာ - စန္ဒရားသင်တန်း",
+    date: "ရက်စွဲ",
+    owner: "ပိုင်ရှင်",
+    description: "ဖော်ပြချက်",
+    descriptionOptional: "ဖော်ပြချက် (ရွေးချယ်နိုင်)",
+    unknownOwner: "မသိရှိ",
+    addTitle: "ငွေစာရင်း ထည့်ရန်",
+    editTitle: "ငွေစာရင်း ပြင်ဆင်ရန်",
+    createTransaction: "ငွေစာရင်း ထည့်ရန်",
+    delete: "ဖျက်မည်",
+    edit: "ပြင်မည်",
+    deleteConfirm: "ဖျက်မှာသေချာပါသလား —",
+    privateLock: "သီးသန့် — သင်သာ မြင်နိုင်သည်",
+    recurringBadge: "ပုံမှန်",
+    trendTitle: "ဝင်ငွေနှင့် အသုံးစရိတ် ခြေရာခံမှု",
+    trendEmpty: "မှတ်တမ်း လုံလောက်မှု မရှိသေးပါ — နောက်လနှစ်လကြာမှ ပြန်စစ်ပါ။",
+    manageRecurring: "ပုံမှန်စည်းမျဉ်းများ စီမံရန်",
+    categories: {
+      salary: "လစာ",
+      bonus: "ဘောနပ်စ်",
+      gift: "လက်ဆောင်",
+      investment: "ရင်းနှီးမြှုပ်နှံမှု",
+      housing: "အိမ်ခြံမြေ",
+      groceries: "စျေးဝယ်စရိတ်",
+      utilities: "လျှပ်စစ်/ရေ စရိတ်",
+      transport: "ခရီးသွားစရိတ်",
+      healthcare: "ကျန်းမာရေး",
+      entertainment: "ဖျော်ဖြေရေး",
+      debt: "အကြွေးပေးဆပ်ခြင်း",
+      other: "အခြား",
+    },
+    recurring: {
+      title: "ပုံမှန်စည်းမျဉ်းများ",
+      addRule: "+ ပုံမှန်စည်းမျဉ်း ထည့်ရန်",
+      frequency: "အကြိမ်ရေ",
+      frequencies: {
+        weekly: "အပတ်စဉ်",
+        monthly: "လစဉ်",
+        quarterly: "သုံးလတစ်ကြိမ်",
+        yearly: "နှစ်စဉ်",
+      },
+      active: "လက်ရှိ",
+      paused: "ခေတ္တရပ်ထား",
+      pause: "ခေတ္တရပ်ရန်",
+      resume: "ပြန်စရန်",
+      nextDue: "နောက်ပေးရမည့်ရက်",
+      noRulesTitle: "ပုံမှန်စည်းမျဉ်း မရှိသေးပါ",
+      noRulesDesc: "လစာ၊ အိမ်ငှားခ သို့မဟုတ် subscription ထည့်၍ အလိုအလျောက် မှတ်တမ်းတင်ပါ။",
+      addRuleTitle: "ပုံမှန်စည်းမျဉ်း ထည့်ရန်",
+      editRuleTitle: "ပုံမှန်စည်းမျဉ်း ပြင်ဆင်ရန်",
+      createRule: "စည်းမျဉ်း ထည့်ရန်",
+      delete: "ဖျက်မည်",
+      edit: "ပြင်မည်",
+      deleteConfirm: "ဖျက်မှာသေချာပါသလား —",
     },
   },
   loans: {
