@@ -2,7 +2,9 @@ import "server-only";
 
 import { FieldValue, type Query } from "firebase-admin/firestore";
 import { getAdminDb } from "@/firebase/admin";
+import { logActivity } from "@/lib/activity.server";
 import { nextDueDateAfter } from "@/lib/cashflow";
+import { formatCurrency } from "@/lib/currency.server";
 import { canViewRecurringRule } from "@/lib/visibility";
 import type {
   ExpenseCategory,
@@ -172,6 +174,16 @@ export async function postDueRecurringTransactions(familyId: string): Promise<nu
     });
     await batch.commit();
     posted++;
+
+    if (rule.visibility === "shared") {
+      await logActivity(
+        familyId,
+        "transaction_added",
+        `${rule.name} (${formatCurrency(rule.amount, rule.currency)}) posted`,
+        rule.visibility,
+        txRef.id,
+      );
+    }
   }
   return posted;
 }

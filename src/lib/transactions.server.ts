@@ -139,10 +139,13 @@ export async function getCurrentMonthTransactions(
 ): Promise<Transaction[]> {
   const month = new Date().toISOString().slice(0, 7); // "YYYY-MM"
   const start = new Date(`${month}-01T00:00:00.000Z`);
+  const end = new Date(start);
+  end.setUTCMonth(end.getUTCMonth() + 1);
 
   const snap = await getAdminDb()
     .collection(`families/${familyId}/transactions`)
     .where("date", ">=", start)
+    .where("date", "<", end)
     .get();
 
   return snap.docs
