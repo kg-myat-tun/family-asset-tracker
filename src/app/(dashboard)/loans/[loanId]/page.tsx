@@ -26,9 +26,7 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ loa
 
   if (!loan || !canViewLoan(loan, user.uid)) notFound();
 
-  const self = members.find((m) => m.uid === user.uid);
   const canAct = loan.lenderId === user.uid || loan.borrowerId === user.uid;
-  const canMutate = canAct || self?.role === "admin";
 
   // Seed the detail query from the data already loaded for the gate above.
   const queryClient = getQueryClient();
@@ -43,7 +41,7 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ loa
         rates={rates}
         members={members}
         canAct={canAct}
-        canMutate={canMutate}
+        canMutate={canAct}
         dict={dict}
       />
     </HydrationBoundary>

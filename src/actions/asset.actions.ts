@@ -81,11 +81,10 @@ async function getContextOrThrow() {
   return { user, family };
 }
 
-async function assertCanMutate(familyId: string, ownerId: string, callerUid: string) {
-  if (ownerId === callerUid) return;
-  const members = await getFamilyMembers(familyId);
-  const self = members.find((m) => m.uid === callerUid);
-  if (self?.role !== "admin") throw new Error("Not authorized");
+// An asset can only be edited or deleted by its owner. Shared visibility only
+// grants other members read access — even family admins cannot mutate it.
+function assertCanMutate(ownerId: string, callerUid: string) {
+  if (ownerId !== callerUid) throw new Error("Not authorized");
 }
 
 export async function createAssetAction(
@@ -129,7 +128,7 @@ export async function updateAssetAction(
     return { errors: { _: ["Asset not found"] } };
   }
 
-  await assertCanMutate(family.id, existing.ownerId, user.uid);
+  assertCanMutate(existing.ownerId, user.uid);
 
   const parsed = AssetSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { errors: parsed.error.flatten().fieldErrors };
@@ -161,7 +160,7 @@ export async function deleteAssetAction(assetId: string): Promise<void> {
   const existing = await getAsset(family.id, assetId);
   if (!existing || !canViewAsset(existing, user.uid)) throw new Error("Not found");
 
-  await assertCanMutate(family.id, existing.ownerId, user.uid);
+  assertCanMutate(existing.ownerId, user.uid);
 
   await softDeleteAsset(family.id, assetId);
   revalidatePath("/assets");
