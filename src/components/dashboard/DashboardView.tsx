@@ -74,8 +74,8 @@ export function DashboardView({ familyId, baseCurrency, rates, members, dict }: 
         />
         <StatTile
           icon={TrendingUp}
-          label={dict.income.monthlyIncome}
-          value={formatCurrency(data.monthlyIncomeTotal, baseCurrency)}
+          label={dict.transactions.monthlyNet}
+          value={formatCurrency(data.monthlyNetTotal, baseCurrency)}
         />
         <StatTile
           icon={ArrowUpRight}

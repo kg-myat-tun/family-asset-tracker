@@ -9,7 +9,7 @@ import type { Family } from "@/types";
 const NAV_ITEMS = [
   { href: "/dashboard", key: "overview", icon: LayoutDashboard },
   { href: "/assets", key: "assets", icon: Wallet },
-  { href: "/income", key: "income", icon: TrendingUp },
+  { href: "/transactions", key: "transactions", icon: TrendingUp },
   { href: "/loans", key: "loans", icon: Handshake },
   { href: "/members", key: "members", icon: Users },
   { href: "/profile", key: "profile", icon: User },
