@@ -13,12 +13,22 @@ export const keys = {
       ["assets", familyId, "list", owner ?? null] as const,
     detail: (familyId: string, assetId: string) => ["assets", familyId, "detail", assetId] as const,
   },
-  income: {
-    all: (familyId: string) => ["income", familyId] as const,
+  transactions: {
+    all: (familyId: string) => ["transactions", familyId] as const,
     list: (familyId: string, owner?: string) =>
-      ["income", familyId, "list", owner ?? null] as const,
-    detail: (familyId: string, incomeId: string) =>
-      ["income", familyId, "detail", incomeId] as const,
+      ["transactions", familyId, "list", owner ?? null] as const,
+    detail: (familyId: string, transactionId: string) =>
+      ["transactions", familyId, "detail", transactionId] as const,
+  },
+  recurringRules: {
+    all: (familyId: string) => ["recurringRules", familyId] as const,
+    list: (familyId: string, owner?: string) =>
+      ["recurringRules", familyId, "list", owner ?? null] as const,
+    detail: (familyId: string, ruleId: string) =>
+      ["recurringRules", familyId, "detail", ruleId] as const,
+  },
+  monthlySummaries: {
+    list: (familyId: string) => ["monthlySummaries", familyId, "list"] as const,
   },
   loans: {
     all: (familyId: string) => ["loans", familyId] as const,
