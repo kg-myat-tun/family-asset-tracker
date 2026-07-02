@@ -65,3 +65,6 @@ graphify-out/
 logs
 *.log
 .env*
+
+# git worktrees (subagent-driven-development scratch)
+.worktrees/

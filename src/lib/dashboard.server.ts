@@ -5,6 +5,7 @@ import { applyLivePrices } from "@/lib/asset-price.server";
 import { convertAmount, getCachedRates } from "@/lib/currency.server";
 import { liveLoanState } from "@/lib/loan-interest";
 import { getNetWorthSnapshots } from "@/lib/networth.server";
+import { getCurrentMonthTransactions } from "@/lib/transactions.server";
 import { canViewAsset, canViewLoan } from "@/lib/visibility";
 import type { Asset, CompoundingPeriod, FamilyMember, Loan, NetWorthSnapshot } from "@/types";
 
@@ -24,6 +25,9 @@ export interface DashboardData {
   assetsTotal: number;
   receivablesTotal: number;
   liabilitiesTotal: number;
+  monthlyIncomeTotal: number;
+  monthlyExpenseTotal: number;
+  monthlyNetTotal: number;
   memberSummaries: MemberSummary[];
   activeLoans: Loan[];
   overdueLoans: Loan[];
@@ -141,11 +145,25 @@ export async function getDashboardData(
   const recentAssets = assets.slice(0, 5);
   const snapshots = await getNetWorthSnapshots(familyId, 90);
 
+  // Transactions are displayed alongside net worth but never summed into it.
+  const monthTransactions = await getCurrentMonthTransactions(familyId, viewerUid);
+  let monthlyIncomeTotal = 0;
+  let monthlyExpenseTotal = 0;
+  for (const t of monthTransactions) {
+    const amountBase = convertAmount(t.amount, t.currency, baseCurrency, rates);
+    if (t.type === "income") monthlyIncomeTotal += amountBase;
+    else monthlyExpenseTotal += amountBase;
+  }
+  const monthlyNetTotal = monthlyIncomeTotal - monthlyExpenseTotal;
+
   return {
     totalNetWorth,
     assetsTotal,
     receivablesTotal,
     liabilitiesTotal,
+    monthlyIncomeTotal,
+    monthlyExpenseTotal,
+    monthlyNetTotal,
     memberSummaries,
     activeLoans,
     overdueLoans,

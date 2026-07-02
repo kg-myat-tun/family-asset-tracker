@@ -2,7 +2,15 @@
 
 import { useQuery } from "@tanstack/react-query";
 import type { LucideIcon } from "lucide-react";
-import { ArrowDownLeft, ArrowUpRight, BarChart3, Handshake, LineChart, Wallet } from "lucide-react";
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  BarChart3,
+  Handshake,
+  LineChart,
+  TrendingUp,
+  Wallet,
+} from "lucide-react";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
 import { LoanAlerts } from "@/components/dashboard/LoanAlerts";
 import { NetWorthChart } from "@/components/dashboard/NetWorthChart";
@@ -58,11 +66,16 @@ export function DashboardView({ familyId, baseCurrency, rates, members, dict }: 
         </div>
       </section>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatTile
           icon={Wallet}
           label={dict.dashboard.assets}
           value={formatCurrency(data.assetsTotal, baseCurrency)}
+        />
+        <StatTile
+          icon={TrendingUp}
+          label={dict.transactions.monthlyNet}
+          value={formatCurrency(data.monthlyNetTotal, baseCurrency)}
         />
         <StatTile
           icon={ArrowUpRight}
