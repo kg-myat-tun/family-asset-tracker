@@ -639,6 +639,7 @@ export async function createTransaction(
   const ref = getAdminDb().collection(`families/${familyId}/transactions`).doc();
   await ref.set({
     ...data,
+    ownerId,
     recurringRuleId: null,
     deleted: false,
     createdAt: FieldValue.serverTimestamp(),
