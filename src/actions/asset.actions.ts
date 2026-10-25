@@ -9,7 +9,7 @@ import { getAssetPrice } from "@/lib/asset-price.server";
 import { createAsset, getAsset, softDeleteAsset, updateAsset } from "@/lib/assets.server";
 import { requireUser } from "@/lib/auth.server";
 import { formatCurrency } from "@/lib/currency.server";
-import { getFamilyForUser, getFamilyMembers } from "@/lib/family.server";
+import { getFamilyForUser, getFamilyMembers, isViewer } from "@/lib/family.server";
 import { canViewAsset } from "@/lib/visibility";
 import type { AssetCategory } from "@/types";
 
@@ -83,8 +83,11 @@ async function getContextOrThrow() {
 
 // An asset can only be edited or deleted by its owner. Shared visibility only
 // grants other members read access — even family admins cannot mutate it.
-function assertCanMutate(ownerId: string, callerUid: string) {
-  if (ownerId !== callerUid) throw new Error("Not authorized");
+// Viewers are read-only even for items they created before being demoted.
+async function assertCanMutate(familyId: string, ownerId: string, callerUid: string) {
+  if (ownerId !== callerUid || (await isViewer(familyId, callerUid))) {
+    throw new Error("Not authorized");
+  }
 }
 
 export async function createAssetAction(
@@ -128,7 +131,7 @@ export async function updateAssetAction(
     return { errors: { _: ["Asset not found"] } };
   }
 
-  assertCanMutate(existing.ownerId, user.uid);
+  await assertCanMutate(family.id, existing.ownerId, user.uid);
 
   const parsed = AssetSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { errors: parsed.error.flatten().fieldErrors };
@@ -160,7 +163,7 @@ export async function deleteAssetAction(assetId: string): Promise<void> {
   const existing = await getAsset(family.id, assetId);
   if (!existing || !canViewAsset(existing, user.uid)) throw new Error("Not found");
 
-  assertCanMutate(existing.ownerId, user.uid);
+  await assertCanMutate(family.id, existing.ownerId, user.uid);
 
   await softDeleteAsset(family.id, assetId);
   revalidatePath("/assets");

@@ -28,7 +28,8 @@ export default async function TransactionDetailPage({
   queryClient.setQueryData(keys.transactions.detail(family.id, transactionId), transaction);
 
   const owner = members.find((m) => m.uid === transaction.ownerId);
-  const canMutate = transaction.ownerId === user.uid;
+  const isReadOnly = members.find((m) => m.uid === user.uid)?.role === "viewer";
+  const canMutate = transaction.ownerId === user.uid && !isReadOnly;
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

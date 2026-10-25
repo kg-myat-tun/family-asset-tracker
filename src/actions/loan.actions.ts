@@ -6,7 +6,7 @@ import { z } from "zod";
 import { deleteActivityForItem, logActivity } from "@/lib/activity.server";
 import { requireUser } from "@/lib/auth.server";
 import { formatCurrency } from "@/lib/currency.server";
-import { getFamilyForUser, getFamilyMembers } from "@/lib/family.server";
+import { getFamilyForUser, getFamilyMembers, isViewer } from "@/lib/family.server";
 import {
   createLoan,
   deleteLoan,
@@ -29,9 +29,11 @@ async function getContextOrThrow() {
 
 // A loan can be edited or deleted only by its participating family members
 // (lender or borrower) — shared visibility only grants other members read
-// access, even family admins cannot mutate it.
-function assertCanMutateLoan(loan: Loan, callerUid: string) {
-  if (loan.lenderId !== callerUid && loan.borrowerId !== callerUid) {
+// access, even family admins cannot mutate it. Viewers are read-only even for
+// loans they took part in before being demoted.
+async function assertCanMutateLoan(familyId: string, loan: Loan, callerUid: string) {
+  const isParticipant = loan.lenderId === callerUid || loan.borrowerId === callerUid;
+  if (!isParticipant || (await isViewer(familyId, callerUid))) {
     throw new Error("Not authorized");
   }
 }
@@ -179,7 +181,7 @@ export async function updateLoanAction(
 
   const loan = await getLoan(family.id, loanId);
   if (!loan || !canViewLoan(loan, user.uid)) return { errors: { _: ["Loan not found"] } };
-  assertCanMutateLoan(loan, user.uid);
+  await assertCanMutateLoan(family.id, loan, user.uid);
 
   const raw = Object.fromEntries(formData);
   for (const key of [
@@ -237,7 +239,7 @@ export async function deleteLoanAction(loanId: string): Promise<void> {
 
   const loan = await getLoan(family.id, loanId);
   if (!loan || !canViewLoan(loan, user.uid)) throw new Error("Not found");
-  assertCanMutateLoan(loan, user.uid);
+  await assertCanMutateLoan(family.id, loan, user.uid);
 
   await deleteLoan(family.id, loanId);
   await logActivity(
