@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { VisibilityBadge } from "@/components/ui/VisibilityBadge";
 import { convertAmount, formatCurrency } from "@/lib/currency";
+import { formatCalendarDate } from "@/lib/dates";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { buildSchedule, hasSchedule, liveLoanState, nextInstallment } from "@/lib/loan-interest";
 import { borrowerName, isExternalParty, lenderName } from "@/lib/loan-party";
@@ -87,7 +88,7 @@ export function LoanDetail({
           {loan.dueDate && (
             <div>
               <p className="text-muted">{dict.loans.dueDate}</p>
-              <p className="font-medium">{loan.dueDate.toLocaleDateString()}</p>
+              <p className="font-medium">{formatCalendarDate(loan.dueDate)}</p>
             </div>
           )}
         </div>

@@ -2,6 +2,7 @@ import { ChevronRight, Lock, Repeat } from "lucide-react";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatCurrency } from "@/lib/currency";
+import { formatCalendarDate } from "@/lib/dates";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { RecurringRule } from "@/types";
 
@@ -48,7 +49,7 @@ export function RecurringRuleList({ rules, memberMap, dict }: Props) {
               </div>
               <p className="mt-0.5 text-xs text-muted truncate">
                 {memberMap[rule.ownerId] ?? dict.transactions.unknownOwner} ·{" "}
-                {dict.transactions.recurring.nextDue}: {rule.nextDueDate.toLocaleDateString()}
+                {dict.transactions.recurring.nextDue}: {formatCalendarDate(rule.nextDueDate)}
               </p>
             </div>
 

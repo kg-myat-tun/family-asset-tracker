@@ -5,6 +5,7 @@ import Link from "next/link";
 import { DeleteTransactionButton } from "@/components/transactions/DeleteTransactionButton";
 import { VisibilityBadge } from "@/components/ui/VisibilityBadge";
 import { formatCurrency } from "@/lib/currency";
+import { formatCalendarDate } from "@/lib/dates";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { fetchJson } from "@/lib/query/fetch-json";
 import { keys } from "@/lib/query/keys";
@@ -69,7 +70,7 @@ export function TransactionDetailView({
           </span>
         </Row>
         <Row label={dict.transactions.category}>{categoryLabel}</Row>
-        <Row label={dict.transactions.date}>{transaction.date.toLocaleDateString()}</Row>
+        <Row label={dict.transactions.date}>{formatCalendarDate(transaction.date)}</Row>
         {transaction.recurringRuleId && (
           <Row label={dict.transactions.recurringBadge}>
             <Link
