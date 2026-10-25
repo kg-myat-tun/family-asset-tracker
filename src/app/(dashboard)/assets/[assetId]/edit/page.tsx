@@ -3,7 +3,7 @@ import { updateAssetAction } from "@/actions/asset.actions";
 import { AssetForm } from "@/components/assets/AssetForm";
 import { getAsset } from "@/lib/assets.server";
 import { requireUser } from "@/lib/auth.server";
-import { getFamilyForUser, getFamilyMembers } from "@/lib/family.server";
+import { getFamilyForUser } from "@/lib/family.server";
 import { getServerI18n } from "@/lib/i18n/server";
 import { canViewAsset } from "@/lib/visibility";
 
@@ -16,10 +16,7 @@ export default async function EditAssetPage({ params }: { params: Promise<{ asse
   const asset = await getAsset(family.id, assetId);
   if (!asset || !canViewAsset(asset, user.uid)) notFound();
 
-  const members = await getFamilyMembers(family.id);
-  const self = members.find((m) => m.uid === user.uid);
-  const canMutate = asset.ownerId === user.uid || self?.role === "admin";
-  if (!canMutate) redirect(`/assets/${asset.id}`);
+  if (asset.ownerId !== user.uid) redirect(`/assets/${asset.id}`);
 
   const boundAction = updateAssetAction.bind(null, asset.id);
   const { dict } = await getServerI18n();

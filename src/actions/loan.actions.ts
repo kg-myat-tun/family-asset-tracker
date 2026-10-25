@@ -27,13 +27,13 @@ async function getContextOrThrow() {
   return { user, family };
 }
 
-// A loan can be edited or deleted by either participating family member, or by
-// any family admin.
-async function assertCanMutateLoan(familyId: string, loan: Loan, callerUid: string) {
-  if (loan.lenderId === callerUid || loan.borrowerId === callerUid) return;
-  const members = await getFamilyMembers(familyId);
-  const self = members.find((m) => m.uid === callerUid);
-  if (self?.role !== "admin") throw new Error("Not authorized");
+// A loan can be edited or deleted only by its participating family members
+// (lender or borrower) — shared visibility only grants other members read
+// access, even family admins cannot mutate it.
+function assertCanMutateLoan(loan: Loan, callerUid: string) {
+  if (loan.lenderId !== callerUid && loan.borrowerId !== callerUid) {
+    throw new Error("Not authorized");
+  }
 }
 
 const CreateLoanSchema = z
@@ -179,7 +179,7 @@ export async function updateLoanAction(
 
   const loan = await getLoan(family.id, loanId);
   if (!loan || !canViewLoan(loan, user.uid)) return { errors: { _: ["Loan not found"] } };
-  await assertCanMutateLoan(family.id, loan, user.uid);
+  assertCanMutateLoan(loan, user.uid);
 
   const raw = Object.fromEntries(formData);
   for (const key of [
@@ -237,7 +237,7 @@ export async function deleteLoanAction(loanId: string): Promise<void> {
 
   const loan = await getLoan(family.id, loanId);
   if (!loan || !canViewLoan(loan, user.uid)) throw new Error("Not found");
-  await assertCanMutateLoan(family.id, loan, user.uid);
+  assertCanMutateLoan(loan, user.uid);
 
   await deleteLoan(family.id, loanId);
   await logActivity(

@@ -60,7 +60,7 @@ Auth is **session-cookie based**, not client tokens. `src/lib/auth.server.ts` ex
 
 Two independent checks, both enforced in the Server Action / lib layer:
 
-- **Roles** (`admin` | `member` | `viewer`): viewers cannot mutate; non-owners need `admin` to edit/delete another member's item. See `assertCanMutate` in the actions.
+- **Roles** (`admin` | `member` | `viewer`): viewers cannot mutate. Edit/delete on an asset is restricted to its owner; on a loan, to its lender/borrower participants. This holds regardless of visibility — `shared` only grants other family members (including admins) read access, never mutate. See `assertCanMutate` / `assertCanMutateLoan` in the actions.
 - **Visibility** (`shared` | `private`): enforced by `canViewAsset` / `canViewLoan` in `src/lib/visibility.ts`. `private` items are visible only to the owner/participants — **admins do not get to see others' private items.**
 
 ### Data model & multi-currency
