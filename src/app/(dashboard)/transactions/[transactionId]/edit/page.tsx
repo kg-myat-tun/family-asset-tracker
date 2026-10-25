@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { updateTransactionAction } from "@/actions/transactions.actions";
 import { TransactionForm } from "@/components/transactions/TransactionForm";
 import { requireUser } from "@/lib/auth.server";
-import { getFamilyForUser, getFamilyMembers } from "@/lib/family.server";
+import { getFamilyForUser } from "@/lib/family.server";
 import { getServerI18n } from "@/lib/i18n/server";
 import { getTransaction } from "@/lib/transactions.server";
 import { canViewTransaction } from "@/lib/visibility";
@@ -20,10 +20,7 @@ export default async function EditTransactionPage({
   const transaction = await getTransaction(family.id, transactionId);
   if (!transaction || !canViewTransaction(transaction, user.uid)) notFound();
 
-  const members = await getFamilyMembers(family.id);
-  const self = members.find((m) => m.uid === user.uid);
-  const canMutate = transaction.ownerId === user.uid || self?.role === "admin";
-  if (!canMutate) redirect(`/transactions/${transaction.id}`);
+  if (transaction.ownerId !== user.uid) redirect(`/transactions/${transaction.id}`);
 
   const boundAction = updateTransactionAction.bind(null, transaction.id);
   const { dict } = await getServerI18n();

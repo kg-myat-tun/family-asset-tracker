@@ -8,6 +8,7 @@ import { requireUser } from "@/lib/auth.server";
 import { SUPPORTED_EXPENSE_CATEGORIES, SUPPORTED_INCOME_CATEGORIES } from "@/lib/cashflow";
 import { formatCurrency } from "@/lib/currency.server";
 import { getFamilyForUser, getFamilyMembers } from "@/lib/family.server";
+import { refreshMonthlySummaries } from "@/lib/monthly-summary.server";
 import {
   createTransaction,
   getTransaction,
@@ -39,7 +40,10 @@ const TransactionSchema = z
     customLabel: z.string().max(100).optional(),
     currency: z.string().length(3, "Invalid currency"),
     amount: z.coerce.number().positive("Amount must be positive"),
-    date: z.string().min(1, "Date is required"),
+    date: z
+      .string()
+      .min(1, "Date is required")
+      .refine((s) => !Number.isNaN(new Date(s).getTime()), "Invalid date"),
     description: z.string().max(500).optional().default(""),
     visibility: z.enum(["private", "shared"]).default("shared"),
   })
@@ -83,11 +87,10 @@ async function getContextOrThrow() {
   return { user, family };
 }
 
-async function assertCanMutate(familyId: string, ownerId: string, callerUid: string) {
-  if (ownerId === callerUid) return;
-  const members = await getFamilyMembers(familyId);
-  const self = members.find((m) => m.uid === callerUid);
-  if (self?.role !== "admin") throw new Error("Not authorized");
+// A transaction can only be edited or deleted by its owner. Shared visibility only
+// grants other members read access — even family admins cannot mutate it.
+function assertCanMutate(ownerId: string, callerUid: string) {
+  if (ownerId !== callerUid) throw new Error("Not authorized");
 }
 
 export async function createTransactionAction(
@@ -106,6 +109,7 @@ export async function createTransactionAction(
 
   const txData = toTransactionData(parsed.data);
   const transactionId = await createTransaction(family.id, user.uid, txData);
+  await refreshMonthlySummaries(family.id, family.baseCurrency, [txData.date]);
 
   await logActivity(
     family.id,
@@ -132,13 +136,15 @@ export async function updateTransactionAction(
     return { errors: { _: ["Transaction not found"] } };
   }
 
-  await assertCanMutate(family.id, existing.ownerId, user.uid);
+  assertCanMutate(existing.ownerId, user.uid);
 
   const parsed = TransactionSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { errors: parsed.error.flatten().fieldErrors };
 
   const txData = toTransactionData(parsed.data);
   await updateTransaction(family.id, transactionId, txData);
+  // Moving a transaction to another month changes both months' totals.
+  await refreshMonthlySummaries(family.id, family.baseCurrency, [existing.date, txData.date]);
 
   if (txData.visibility === "private") {
     await deleteActivityForItem(family.id, transactionId);
@@ -164,9 +170,10 @@ export async function deleteTransactionAction(transactionId: string): Promise<vo
   const existing = await getTransaction(family.id, transactionId);
   if (!existing || !canViewTransaction(existing, user.uid)) throw new Error("Not found");
 
-  await assertCanMutate(family.id, existing.ownerId, user.uid);
+  assertCanMutate(existing.ownerId, user.uid);
 
   await softDeleteTransaction(family.id, transactionId);
+  await refreshMonthlySummaries(family.id, family.baseCurrency, [existing.date]);
   revalidatePath("/transactions");
   revalidatePath("/dashboard");
   redirect("/transactions");

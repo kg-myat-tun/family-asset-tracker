@@ -11,6 +11,7 @@ import { getFamilyForUser, getFamilyMembers } from "@/lib/family.server";
 import {
   createRecurringRule,
   getRecurringRule,
+  setRecurringRuleActive,
   softDeleteRecurringRule,
   updateRecurringRule,
 } from "@/lib/recurring.server";
@@ -81,11 +82,10 @@ async function getContextOrThrow() {
   return { user, family };
 }
 
-async function assertCanMutate(familyId: string, ownerId: string, callerUid: string) {
-  if (ownerId === callerUid) return;
-  const members = await getFamilyMembers(familyId);
-  const self = members.find((m) => m.uid === callerUid);
-  if (self?.role !== "admin") throw new Error("Not authorized");
+// A recurring rule can only be edited or deleted by its owner. Shared visibility only
+// grants other members read access — even family admins cannot mutate it.
+function assertCanMutate(ownerId: string, callerUid: string) {
+  if (ownerId !== callerUid) throw new Error("Not authorized");
 }
 
 export async function createRecurringRuleAction(
@@ -130,7 +130,7 @@ export async function updateRecurringRuleAction(
     return { errors: { _: ["Recurring rule not found"] } };
   }
 
-  await assertCanMutate(family.id, existing.ownerId, user.uid);
+  assertCanMutate(existing.ownerId, user.uid);
 
   const parsed = RecurringRuleSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { errors: parsed.error.flatten().fieldErrors };
@@ -161,7 +161,7 @@ export async function deleteRecurringRuleAction(ruleId: string): Promise<void> {
   const existing = await getRecurringRule(family.id, ruleId);
   if (!existing || !canViewRecurringRule(existing, user.uid)) throw new Error("Not found");
 
-  await assertCanMutate(family.id, existing.ownerId, user.uid);
+  assertCanMutate(existing.ownerId, user.uid);
 
   await softDeleteRecurringRule(family.id, ruleId);
   revalidatePath("/transactions/recurring");
@@ -180,8 +180,8 @@ export async function toggleRecurringRuleActiveAction(
   const existing = await getRecurringRule(family.id, ruleId);
   if (!existing || !canViewRecurringRule(existing, user.uid)) throw new Error("Not found");
 
-  await assertCanMutate(family.id, existing.ownerId, user.uid);
+  assertCanMutate(existing.ownerId, user.uid);
 
-  await updateRecurringRule(family.id, ruleId, { active });
+  await setRecurringRuleActive(family.id, existing, active);
   revalidatePath("/transactions/recurring");
 }
