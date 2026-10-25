@@ -7,7 +7,7 @@ import { deleteActivityForItem, logActivity } from "@/lib/activity.server";
 import { requireUser } from "@/lib/auth.server";
 import { SUPPORTED_EXPENSE_CATEGORIES, SUPPORTED_INCOME_CATEGORIES } from "@/lib/cashflow";
 import { formatCurrency } from "@/lib/currency.server";
-import { getFamilyForUser, getFamilyMembers } from "@/lib/family.server";
+import { getFamilyForUser, getFamilyMembers, isViewer } from "@/lib/family.server";
 import { refreshMonthlySummaries } from "@/lib/monthly-summary.server";
 import {
   createTransaction,
@@ -89,8 +89,11 @@ async function getContextOrThrow() {
 
 // A transaction can only be edited or deleted by its owner. Shared visibility only
 // grants other members read access — even family admins cannot mutate it.
-function assertCanMutate(ownerId: string, callerUid: string) {
-  if (ownerId !== callerUid) throw new Error("Not authorized");
+// Viewers are read-only even for items they created before being demoted.
+async function assertCanMutate(familyId: string, ownerId: string, callerUid: string) {
+  if (ownerId !== callerUid || (await isViewer(familyId, callerUid))) {
+    throw new Error("Not authorized");
+  }
 }
 
 export async function createTransactionAction(
@@ -136,7 +139,7 @@ export async function updateTransactionAction(
     return { errors: { _: ["Transaction not found"] } };
   }
 
-  assertCanMutate(existing.ownerId, user.uid);
+  await assertCanMutate(family.id, existing.ownerId, user.uid);
 
   const parsed = TransactionSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { errors: parsed.error.flatten().fieldErrors };
@@ -170,7 +173,7 @@ export async function deleteTransactionAction(transactionId: string): Promise<vo
   const existing = await getTransaction(family.id, transactionId);
   if (!existing || !canViewTransaction(existing, user.uid)) throw new Error("Not found");
 
-  assertCanMutate(existing.ownerId, user.uid);
+  await assertCanMutate(family.id, existing.ownerId, user.uid);
 
   await softDeleteTransaction(family.id, transactionId);
   await refreshMonthlySummaries(family.id, family.baseCurrency, [existing.date]);

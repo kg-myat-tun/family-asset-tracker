@@ -39,6 +39,13 @@ export async function updateFamilySettings(
   await getAdminDb().doc(`families/${familyId}`).set({ settings }, { merge: true });
 }
 
+// Viewers are read-only — including for items they created before being
+// demoted — so every mutating action checks the caller's current role.
+export async function isViewer(familyId: string, uid: string): Promise<boolean> {
+  const members = await getFamilyMembers(familyId);
+  return members.find((m) => m.uid === uid)?.role === "viewer";
+}
+
 export async function getFamilyMembers(familyId: string): Promise<FamilyMember[]> {
   const snap = await getAdminDb()
     .collection(`families/${familyId}/members`)

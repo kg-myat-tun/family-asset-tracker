@@ -26,7 +26,9 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ loa
 
   if (!loan || !canViewLoan(loan, user.uid)) notFound();
 
-  const canAct = loan.lenderId === user.uid || loan.borrowerId === user.uid;
+  const isReadOnly = members.find((m) => m.uid === user.uid)?.role === "viewer";
+  const isParticipant = loan.lenderId === user.uid || loan.borrowerId === user.uid;
+  const canAct = isParticipant && !isReadOnly;
 
   // Seed the detail query from the data already loaded for the gate above.
   const queryClient = getQueryClient();

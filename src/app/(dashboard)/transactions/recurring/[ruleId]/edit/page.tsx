@@ -4,7 +4,7 @@ import { DeleteRecurringRuleButton } from "@/components/transactions/DeleteRecur
 import { PauseResumeButton } from "@/components/transactions/PauseResumeButton";
 import { RecurringRuleForm } from "@/components/transactions/RecurringRuleForm";
 import { requireUser } from "@/lib/auth.server";
-import { getFamilyForUser } from "@/lib/family.server";
+import { getFamilyForUser, isViewer } from "@/lib/family.server";
 import { getServerI18n } from "@/lib/i18n/server";
 import { getRecurringRule } from "@/lib/recurring.server";
 import { canViewRecurringRule } from "@/lib/visibility";
@@ -22,7 +22,9 @@ export default async function EditRecurringRulePage({
   const rule = await getRecurringRule(family.id, ruleId);
   if (!rule || !canViewRecurringRule(rule, user.uid)) notFound();
 
-  if (rule.ownerId !== user.uid) redirect("/transactions/recurring");
+  if (rule.ownerId !== user.uid || (await isViewer(family.id, user.uid))) {
+    redirect("/transactions/recurring");
+  }
 
   const boundAction = updateRecurringRuleAction.bind(null, rule.id);
   const { dict } = await getServerI18n();

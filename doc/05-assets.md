@@ -84,10 +84,10 @@ import { NextResponse } from "next/server";
 import { adminDb } from "@/firebase/admin";
 import { FieldValue } from "firebase-admin/firestore";
 
-// Secured: only Vercel Cron or requests with CRON_SECRET can call this
+// Secured: Vercel Cron sends `Authorization: Bearer <CRON_SECRET>`
+// (see isAuthorizedCronRequest in src/lib/cron-auth.server.ts)
 export async function GET(request: Request) {
-  const secret = new URL(request.url).searchParams.get("secret");
-  if (secret !== process.env.CRON_SECRET) {
+  if (!isAuthorizedCronRequest(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -117,7 +117,7 @@ Update `vercel.json`:
 {
   "crons": [
     {
-      "path": "/api/fx-rates?secret=YOUR_CRON_SECRET",
+      "path": "/api/fx-rates",
       "schedule": "0 1 * * *"
     }
   ]
@@ -539,6 +539,6 @@ export function AssetList({ assets, baseCurrency, rates }: Props) {
 - [ ] Editing an asset works for owner and admin; non-owner member cannot edit
 - [ ] Soft delete sets `deleted: true` — asset disappears from list but remains in Firestore
 - [ ] FX rates are fetched from Frankfurter API and cached in Firestore on first load
-- [ ] `GET /api/fx-rates?secret=...` works and updates rates for all families
+- [ ] `GET /api/fx-rates` with `Authorization: Bearer $CRON_SECRET` works and updates rates for all families
 - [ ] Currency amounts display correctly using `Intl.NumberFormat`
 - [ ] Loading skeleton appears while data fetches

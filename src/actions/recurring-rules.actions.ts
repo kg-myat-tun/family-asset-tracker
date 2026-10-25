@@ -7,7 +7,7 @@ import { deleteActivityForItem, logActivity } from "@/lib/activity.server";
 import { requireUser } from "@/lib/auth.server";
 import { SUPPORTED_EXPENSE_CATEGORIES, SUPPORTED_INCOME_CATEGORIES } from "@/lib/cashflow";
 import { formatCurrency } from "@/lib/currency.server";
-import { getFamilyForUser, getFamilyMembers } from "@/lib/family.server";
+import { getFamilyForUser, getFamilyMembers, isViewer } from "@/lib/family.server";
 import {
   createRecurringRule,
   getRecurringRule,
@@ -84,8 +84,11 @@ async function getContextOrThrow() {
 
 // A recurring rule can only be edited or deleted by its owner. Shared visibility only
 // grants other members read access — even family admins cannot mutate it.
-function assertCanMutate(ownerId: string, callerUid: string) {
-  if (ownerId !== callerUid) throw new Error("Not authorized");
+// Viewers are read-only even for items they created before being demoted.
+async function assertCanMutate(familyId: string, ownerId: string, callerUid: string) {
+  if (ownerId !== callerUid || (await isViewer(familyId, callerUid))) {
+    throw new Error("Not authorized");
+  }
 }
 
 export async function createRecurringRuleAction(
@@ -130,7 +133,7 @@ export async function updateRecurringRuleAction(
     return { errors: { _: ["Recurring rule not found"] } };
   }
 
-  assertCanMutate(existing.ownerId, user.uid);
+  await assertCanMutate(family.id, existing.ownerId, user.uid);
 
   const parsed = RecurringRuleSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { errors: parsed.error.flatten().fieldErrors };
@@ -161,7 +164,7 @@ export async function deleteRecurringRuleAction(ruleId: string): Promise<void> {
   const existing = await getRecurringRule(family.id, ruleId);
   if (!existing || !canViewRecurringRule(existing, user.uid)) throw new Error("Not found");
 
-  assertCanMutate(existing.ownerId, user.uid);
+  await assertCanMutate(family.id, existing.ownerId, user.uid);
 
   await softDeleteRecurringRule(family.id, ruleId);
   revalidatePath("/transactions/recurring");
@@ -180,7 +183,7 @@ export async function toggleRecurringRuleActiveAction(
   const existing = await getRecurringRule(family.id, ruleId);
   if (!existing || !canViewRecurringRule(existing, user.uid)) throw new Error("Not found");
 
-  assertCanMutate(existing.ownerId, user.uid);
+  await assertCanMutate(family.id, existing.ownerId, user.uid);
 
   await setRecurringRuleActive(family.id, existing, active);
   revalidatePath("/transactions/recurring");

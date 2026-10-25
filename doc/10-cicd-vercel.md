@@ -35,7 +35,9 @@ Project → **Settings → Environment Variables**, add the values from
 account via the relevant `FIREBASE_*` / admin credentials your code reads.
 
 Also set `CRON_SECRET` — the cron jobs in `vercel.json` (`/api/fx-rates`,
-`/api/reminders`) rely on it.
+`/api/reminders`, `/api/recurring-transactions`) rely on it. Vercel Cron sends it
+as an `Authorization: Bearer` header; to run one by hand, use
+`curl -H "Authorization: Bearer $CRON_SECRET" https://<host>/api/fx-rates`.
 
 ### 3. Create the deploy hook
 

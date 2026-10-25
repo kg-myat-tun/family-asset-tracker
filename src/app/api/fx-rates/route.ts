@@ -2,6 +2,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import { getAdminDb } from "@/firebase/admin";
+import { isAuthorizedCronRequest } from "@/lib/cron-auth.server";
 import { DEFAULT_MMK_PER_USD } from "@/lib/currency";
 import { applyMmkRate } from "@/lib/currency.server";
 import { recordNetWorthSnapshot } from "@/lib/networth.server";
@@ -9,8 +10,7 @@ import { recordNetWorthSnapshot } from "@/lib/networth.server";
 const FX_API = "https://api.frankfurter.app/latest?base=USD";
 
 export async function GET(request: Request) {
-  const secret = new URL(request.url).searchParams.get("secret");
-  if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
+  if (!isAuthorizedCronRequest(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
