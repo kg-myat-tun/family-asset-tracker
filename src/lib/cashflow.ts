@@ -47,20 +47,36 @@ export function monthlyEquivalent(amount: number, frequency: RecurringFrequency)
 // recurring-transactions cron to move a rule's nextDueDate forward after
 // posting. Works in UTC to match this repo's existing day-boundary convention
 // (see the fx-rates/reminders crons' toISOString().split("T")[0] usage).
-export function nextDueDateAfter(date: Date, frequency: RecurringFrequency): Date {
-  const next = new Date(date);
+// Month-based cadences land on `anchorDay`, clamped to the target month's
+// length, so a rule anchored on the 31st goes Jan 31 -> Feb 28 -> Mar 31
+// instead of rolling over into March or drifting to the 28th.
+export function nextDueDateAfter(
+  date: Date,
+  frequency: RecurringFrequency,
+  anchorDay = date.getUTCDate(),
+): Date {
   switch (frequency) {
-    case "weekly":
+    case "weekly": {
+      const next = new Date(date);
       next.setUTCDate(next.getUTCDate() + 7);
       return next;
+    }
     case "monthly":
-      next.setUTCMonth(next.getUTCMonth() + 1);
-      return next;
+      return addUTCMonthsClamped(date, 1, anchorDay);
     case "quarterly":
-      next.setUTCMonth(next.getUTCMonth() + 3);
-      return next;
+      return addUTCMonthsClamped(date, 3, anchorDay);
     case "yearly":
-      next.setUTCFullYear(next.getUTCFullYear() + 1);
-      return next;
+      return addUTCMonthsClamped(date, 12, anchorDay);
   }
+}
+
+function addUTCMonthsClamped(date: Date, months: number, anchorDay: number): Date {
+  const next = new Date(date);
+  next.setUTCDate(1);
+  next.setUTCMonth(next.getUTCMonth() + months);
+  const daysInMonth = new Date(
+    Date.UTC(next.getUTCFullYear(), next.getUTCMonth() + 1, 0),
+  ).getUTCDate();
+  next.setUTCDate(Math.min(anchorDay, daysInMonth));
+  return next;
 }

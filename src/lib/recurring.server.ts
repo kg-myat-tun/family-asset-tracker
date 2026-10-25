@@ -129,15 +129,30 @@ export async function softDeleteRecurringRule(familyId: string, ruleId: string):
   });
 }
 
-// Posts a dated Transaction for every active, due RecurringRule, then advances
-// nextDueDate past today. The equality filters below (deleted, active) are
-// safe without a composite index; nextDueDate is compared in application code
-// rather than as a third Firestore range filter, avoiding the
-// equality+range-on-different-field combination that would require one (see
-// Global Constraints). Advancing nextDueDate immediately after posting makes
-// this idempotent: a retried/delayed cron run cannot double-post a rule for
-// the same period.
-export async function postDueRecurringTransactions(familyId: string): Promise<number> {
+// A rule's month-based cadence stays on the day of the month it was created
+// (nextDueDate is seeded from the creation time), even after a short month
+// clamps one occurrence to an earlier day.
+function anchorDayOf(rule: RecurringRule): number {
+  return rule.createdAt.getUTCDate();
+}
+
+// Caps how many missed occurrences one rule may post in a single run, keeping
+// each batch well under Firestore's 500-write limit. Anything left over posts
+// on the next run.
+const MAX_OCCURRENCES_PER_RUN = 100;
+
+// Posts a dated Transaction for every due occurrence of every active
+// RecurringRule, then advances nextDueDate past today. If the cron missed
+// runs, all overdue occurrences post in this run (each with its own date)
+// rather than one per day. Returns the dates posted, so the caller can
+// refresh the monthly summaries those dates fall in. The equality filters
+// below (deleted, active) are safe without a composite index; nextDueDate is
+// compared in application code rather than as a third Firestore range filter,
+// avoiding the equality+range-on-different-field combination that would
+// require one (see Global Constraints). Advancing nextDueDate in the same
+// batch as the postings makes this idempotent: a retried/delayed cron run
+// cannot double-post a rule for the same period.
+export async function postDueRecurringTransactions(familyId: string): Promise<Date[]> {
   const db = getAdminDb();
   const today = new Date();
   const snap = await db
@@ -148,42 +163,70 @@ export async function postDueRecurringTransactions(familyId: string): Promise<nu
 
   const dueRules = snap.docs.map(docToRecurringRule).filter((rule) => rule.nextDueDate <= today);
 
-  let posted = 0;
+  const postedDates: Date[] = [];
   for (const rule of dueRules) {
     const batch = db.batch();
-    const txRef = db.collection(`families/${familyId}/transactions`).doc();
-    batch.set(txRef, {
-      ownerId: rule.ownerId,
-      type: rule.type,
-      name: rule.name,
-      category: rule.category,
-      customLabel: rule.customLabel,
-      currency: rule.currency,
-      amount: rule.amount,
-      date: rule.nextDueDate,
-      recurringRuleId: rule.id,
-      description: "",
-      visibility: rule.visibility,
-      deleted: false,
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
-    });
+    const posted: { id: string; date: Date }[] = [];
+    let dueDate = rule.nextDueDate;
+    while (dueDate <= today && posted.length < MAX_OCCURRENCES_PER_RUN) {
+      const txRef = db.collection(`families/${familyId}/transactions`).doc();
+      batch.set(txRef, {
+        ownerId: rule.ownerId,
+        type: rule.type,
+        name: rule.name,
+        category: rule.category,
+        customLabel: rule.customLabel,
+        currency: rule.currency,
+        amount: rule.amount,
+        date: dueDate,
+        recurringRuleId: rule.id,
+        description: "",
+        visibility: rule.visibility,
+        deleted: false,
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+      posted.push({ id: txRef.id, date: dueDate });
+      dueDate = nextDueDateAfter(dueDate, rule.frequency, anchorDayOf(rule));
+    }
     batch.update(db.doc(`families/${familyId}/recurringRules/${rule.id}`), {
-      nextDueDate: nextDueDateAfter(rule.nextDueDate, rule.frequency),
+      nextDueDate: dueDate,
       updatedAt: FieldValue.serverTimestamp(),
     });
     await batch.commit();
-    posted++;
+    postedDates.push(...posted.map((p) => p.date));
 
     if (rule.visibility === "shared") {
-      await logActivity(
-        familyId,
-        "transaction_added",
-        `${rule.name} (${formatCurrency(rule.amount, rule.currency)}) posted`,
-        rule.visibility,
-        txRef.id,
-      );
+      for (const p of posted) {
+        await logActivity(
+          familyId,
+          "transaction_added",
+          `${rule.name} (${formatCurrency(rule.amount, rule.currency)}) posted`,
+          rule.visibility,
+          p.id,
+        );
+      }
     }
   }
-  return posted;
+  return postedDates;
+}
+
+// Pauses or resumes a rule. Resuming skips the occurrences that fell due while
+// paused: nextDueDate moves to the first occurrence after now, so the cron
+// doesn't backfill transactions the user meant to skip.
+export async function setRecurringRuleActive(
+  familyId: string,
+  rule: RecurringRule,
+  active: boolean,
+): Promise<void> {
+  const update: { active: boolean; nextDueDate?: Date } = { active };
+  if (active && !rule.active) {
+    const now = new Date();
+    let dueDate = rule.nextDueDate;
+    while (dueDate <= now) dueDate = nextDueDateAfter(dueDate, rule.frequency, anchorDayOf(rule));
+    update.nextDueDate = dueDate;
+  }
+  await getAdminDb()
+    .doc(`families/${familyId}/recurringRules/${rule.id}`)
+    .update({ ...update, updatedAt: FieldValue.serverTimestamp() });
 }

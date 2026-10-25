@@ -3,6 +3,7 @@ import "server-only";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/firebase/admin";
 import { convertAmount } from "@/lib/currency";
+import { getCachedRates } from "@/lib/currency.server";
 import type { MonthlySummary } from "@/types";
 
 // Sums that month's non-deleted transactions across ALL visibilities (private
@@ -52,6 +53,22 @@ export async function recordMonthlySummary(
       baseCurrency,
       recordedAt: FieldValue.serverTimestamp(),
     });
+}
+
+// Recomputes the summaries for every month the given dates fall in. Called
+// after any write that can change a month's totals (including past months),
+// so a month's trend point doesn't stay frozen at its last cron run.
+export async function refreshMonthlySummaries(
+  familyId: string,
+  baseCurrency: string,
+  dates: Date[],
+): Promise<void> {
+  const months = new Set(dates.map((d) => d.toISOString().slice(0, 7)));
+  if (months.size === 0) return;
+  const rates = await getCachedRates(familyId);
+  await Promise.all(
+    [...months].map((month) => recordMonthlySummary(familyId, month, baseCurrency, rates)),
+  );
 }
 
 export async function getMonthlySummaries(familyId: string, limit = 12): Promise<MonthlySummary[]> {
