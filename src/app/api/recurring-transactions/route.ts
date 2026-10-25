@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { getAdminDb } from "@/firebase/admin";
+import { isAuthorizedCronRequest } from "@/lib/cron-auth.server";
 import { refreshMonthlySummaries } from "@/lib/monthly-summary.server";
 import { postDueRecurringTransactions } from "@/lib/recurring.server";
 
 export async function GET(request: Request) {
-  const secret = new URL(request.url).searchParams.get("secret");
-  if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
+  if (!isAuthorizedCronRequest(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

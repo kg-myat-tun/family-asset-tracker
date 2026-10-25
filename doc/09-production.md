@@ -259,7 +259,7 @@ Minimum critical-path coverage in `e2e/`:
 - [ ] `FIREBASE_SERVICE_ACCOUNT_KEY_PATH`, `CRON_SECRET`, Sentry tokens, and KV credentials are **server-only**.
 - [ ] Every key in `.env.local` has a matching empty key in `.env.example` (no real values committed).
 - [ ] All production values are set in the Vercel project dashboard (Production + Preview scopes).
-- [ ] `vercel.json` cron path includes `?secret=` matching `CRON_SECRET`.
+- [ ] `CRON_SECRET` is set in Vercel; cron paths in `vercel.json` carry no secret (Vercel Cron sends it as `Authorization: Bearer`).
 
 Reference set (see `00-master.md` for the authoritative list):
 
