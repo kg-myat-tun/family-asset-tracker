@@ -11,6 +11,10 @@
     {
       "path": "/api/reminders",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/recurring-transactions",
+      "schedule": "0 3 * * *"
     }
   ]
 }

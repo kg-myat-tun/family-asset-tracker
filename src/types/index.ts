@@ -15,6 +15,18 @@ export type CompoundingPeriod = "none" | "monthly" | "annually";
 // "shared" = visible to the whole family; "private" = visible only to the
 // owner (assets) or loan participants. Legacy docs without the field are shared.
 export type Visibility = "private" | "shared";
+export type TransactionType = "income" | "expense";
+export type IncomeCategory = "salary" | "bonus" | "gift" | "investment" | "other";
+export type ExpenseCategory =
+  | "housing"
+  | "groceries"
+  | "utilities"
+  | "transport"
+  | "healthcare"
+  | "entertainment"
+  | "debt"
+  | "other";
+export type RecurringFrequency = "weekly" | "monthly" | "quarterly" | "yearly";
 
 export interface FamilyMember {
   uid: string;
@@ -57,6 +69,58 @@ export interface Asset {
   deleted: boolean;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface RecurringRule {
+  id: string;
+  ownerId: string;
+  type: TransactionType;
+  name: string; // "Salary — Acme Corp"
+  category: IncomeCategory | ExpenseCategory;
+  // Free-text label shown instead of "Other" when category === "other"; null otherwise.
+  customLabel: string | null;
+  currency: string;
+  amount: number; // per-occurrence
+  frequency: RecurringFrequency;
+  // Next date the cron should post a Transaction for this rule; advances after each posting.
+  nextDueDate: Date;
+  active: boolean; // pause without deleting
+  visibility: Visibility;
+  deleted: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Transaction {
+  id: string;
+  ownerId: string;
+  type: TransactionType;
+  name: string;
+  category: IncomeCategory | ExpenseCategory;
+  customLabel: string | null;
+  currency: string;
+  amount: number;
+  date: Date; // when it actually happened
+  // The RecurringRule that generated this transaction, or null if logged by hand.
+  recurringRuleId: string | null;
+  description: string;
+  visibility: Visibility;
+  deleted: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface MonthlySummary {
+  // "YYYY-MM" (also the document id), in the family's base currency. Includes
+  // all transactions regardless of visibility — an objective family metric,
+  // same precedent as NetWorthSnapshot.
+  month: string;
+  totalIncomeBase: number;
+  totalExpenseBase: number;
+  netBase: number;
+  byCategoryBase: Record<string, number>;
+  baseCurrency: string;
+  recordedAt: Date;
 }
 
 export interface Loan {
